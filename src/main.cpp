@@ -5,7 +5,10 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "OpenGLCtx.h"
+#include "MengerCube.h"
 #include <stdio.h>
+#include <fstream>
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header file and requires individual function pointers to be loaded manually. 
 // Helper libraries are often used for this purpose! Here we are supporting a few common ones: gl3w, glew, glad.
@@ -21,10 +24,60 @@
 #endif
 
 #include <GLFW/glfw3.h> // Include glfw3.h after our OpenGL definitions
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+void createMengerCubes(int maxRecursionLvl, const std::string& texturePath, float edgeLength, const OpenGLCtx& openGlCtx, std::vector<std::unique_ptr<Object3D>>& objects)
+{
+	MengerCubeFragmentsCache mengerCubeFragments(maxRecursionLvl);
+
+	for (int i = 0; i <= maxRecursionLvl; ++i)
+	{
+		objects.push_back(std::unique_ptr<Object3D>(
+            new TexMengerCube(mengerCubeFragments, i, edgeLength, openGlCtx.getModelMatLocation(), texturePath, openGlCtx.getAPos(), openGlCtx.getATex())
+        ));
+	}
+}
+
+bool init = true;
+
+const float mouseSensitivity = 0.1f;
+float cursorLastX = 0;
+float cursorLastY = 0;
+float cursorDeltaX = 0;
+float cursorDeltaY = 0;
+
+void mouseCallback(GLFWwindow* window, double xPos, double yPos)
+{
+	const auto xPosf = static_cast<float>(xPos);
+	const auto yPosf = static_cast<float>(yPos);
+	
+	if (init)
+	{
+		init = false;
+		cursorLastX = xPosf;
+		cursorLastY = yPosf;
+	}
+	
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+    {
+	    cursorDeltaX = xPosf - cursorLastX;
+		cursorDeltaY = yPosf - cursorLastY;
+    }
+    else
+    {
+	    cursorDeltaX = 0;
+    	cursorDeltaY = 0;
+    }
+
+	cursorLastX = xPosf;
+	cursorLastY = yPosf;
 }
 
 int main(int, char**)
@@ -51,12 +104,16 @@ int main(int, char**)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
+	int windowW = 1280;
+	int windowH = 720;
+	
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowW, windowH, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+	glfwSetCursorPosCallback(window, mouseCallback);
 
     // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
@@ -101,10 +158,31 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    bool show_demo_window = false;
 
+    int recursionLvl = 1;
+	const int minRecursionLvl = 0;
+	const int maxRecursionLvl = 4;
+	
+    OpenGLCtx openGlCtx;
+	
+	try
+	{
+		openGlCtx.init();
+	}
+	catch (std::exception& e)
+	{
+		printf(e.what());
+		return 1;
+	}
+
+    std::vector<std::unique_ptr<Object3D>> objects;
+	createMengerCubes(maxRecursionLvl, "..\\..\\res\\textures\\stone.jpg", 1.3f, openGlCtx, objects);
+
+    glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
+    glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
+	glm::vec4 userColor(0.0f, 0.0f, 0.0f, 0.0f);
+	
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -126,45 +204,41 @@ int main(int, char**)
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            ImGui::Begin("Menger cube");
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
+        	ImGui::SliderInt("Recursion level", &recursionLvl, minRecursionLvl, maxRecursionLvl);
+        	ImGui::ColorEdit4("Color", glm::value_ptr(userColor));
+        	
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
-
-        // Rendering
         ImGui::Render();
         int display_w, display_h;
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
+    	
+        for (auto&& object : objects)
+        {        	
+	        object->modelMat = glm::rotate(object->modelMat, glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec);
+	        object->modelMat = glm::rotate(object->modelMat, glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
+        }
+
+    	glm::mat4 rotationMat = glm::inverse(objects[0]->modelMat) * glm::inverse(openGlCtx.getViewMat());
+
+    	glm::vec4 xRotationVec4 = rotationMat * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+        glm::vec4 yRotationVec4 = rotationMat * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    	
+        xRotationVec = glm::normalize(glm::vec3(xRotationVec4.x, xRotationVec4.y, xRotationVec4.z));
+        yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));
+
+		glUniform4fv(glGetUniformLocation(openGlCtx.getShaderProgram().getProgramId(), "userColor"), 1, glm::value_ptr(userColor));
+    	
+    	openGlCtx.render(display_w, display_h, objects.begin() + recursionLvl, objects.begin() + recursionLvl + 1);
+    	
+        cursorDeltaX = 0;
+        cursorDeltaY = 0;
+    	
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwMakeContextCurrent(window);
