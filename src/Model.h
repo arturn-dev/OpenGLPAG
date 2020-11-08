@@ -9,6 +9,10 @@ typedef std::vector<Mesh> MeshCollection;
 
 class Model
 {
+public:
+	glm::mat4 modelMat;
+	
+private:
 	MeshCollection meshes;
 
 public:
@@ -17,5 +21,7 @@ public:
 	Model(Model&& other) noexcept;
 	~Model();
 
-	glm::mat4 modelMat;
+	Model& operator=(Model&& other) noexcept;
+
+	void draw() const; // TODO: pass the model matrix through the Mesh objects to the OpenGLRender object.
 };

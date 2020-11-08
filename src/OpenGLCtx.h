@@ -7,6 +7,7 @@
 
 #include "ShaderProgram.h"
 #include "Object3D.h"
+#include "Model.h"
 
 class OpenGLCtx
 {
@@ -18,12 +19,12 @@ class OpenGLCtx
 
 public:
 	OpenGLCtx();
-	~OpenGLCtx();
 
 	void init();
 	void render(int windowW, int windowH, 
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsStartIt,
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsEndIt);
+	void render(int windowW, int windowH, const Model* model);
 
 	GLint getModelMatLocation() const;
 	GLuint getAPos() const;
@@ -31,5 +32,7 @@ public:
 	GLuint getATex() const;
 	glm::mat4 getViewMat() const;
 	const ShaderProgram& getShaderProgram() const;
+
+	void deleteCtx();
 };
 

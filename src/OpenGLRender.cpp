@@ -26,27 +26,15 @@ OpenGLRender::~OpenGLRender()
 {
 }
 
-//void OpenGLRender::setVertexAttribPointers(std::vector<AttribPointerLayout> attribPointerLayouts)
-//{
-//	glBindVertexArray(vao);
-//	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-//	
-//	for (auto&& a : attribPointerLayouts)
-//	{
-//		glVertexAttribPointer(a.attribute, a.size, GL_FLOAT, GL_FALSE, a.stride, a.offset);
-//		glEnableVertexAttribArray(a.attribute);
-//	}
-//}
-
 template <>
 void OpenGLRender::setVertexAttribPointers<Vertex>()
 {
-	glBindVertexArray(vao);
+	//glBindVertexArray(vao);
 
 	GLuint attribute = shaderProgram.getAttribPos();
 	if (attribute == -1U)
 	{
-		throw std::logic_error("Location of vertex position attribute is unknown in the shader program.");
+		throw std::logic_error("Location of vertex's position attribute is unknown in the shader program.");
 	}
 	glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, pos)));
@@ -55,21 +43,33 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 	attribute = shaderProgram.getAttribTex();
 	if (attribute == -1U)
 	{
-		throw std::logic_error("Location of vertex texture coordinates attribute is unknown in the shader program.");
+		throw std::logic_error("Location of vertex's texture coordinates attribute is unknown in the shader program.");
 	}
 	glVertexAttribPointer(attribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, tex)));
 	glEnableVertexAttribArray(attribute);
 
 	attribute = shaderProgram.getAttribNorm();
-	if (attribute == -1U)
+	if (attribute != -1U)
 	{
-		throw std::logic_error("Location of vertex normal coordinates attribute is unknown in the shader program.");
-	}
-	glVertexAttribPointer(attribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+		//throw std::logic_error("Location of vertex's normal coordinates attribute is unknown in the shader program.");
+		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, normal)));
-	glEnableVertexAttribArray(attribute);
+		glEnableVertexAttribArray(attribute);
+	}
 	
+	
+	//glBindVertexArray(0);
+}
+
+void OpenGLRender::setIndexBufferData(const std::vector<GLuint>& indices)
+{
+	glBindVertexArray(vao);
+	
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
 	glBindVertexArray(0);
 }
 
@@ -89,10 +89,11 @@ void OpenGLRender::addTextureFromPath(Texture texture)
 	}
 	
 	textureInfos.emplace_back();
-	textureInfos.end()->texture.type = texture.type;
+	auto lastTexInfoIt = (textureInfos.end() - 1);
+	lastTexInfoIt->texture = texture;
 
-	glGenTextures(1, &(textureInfos.end() - 1)->id);
-	glBindTexture(GL_TEXTURE_2D, (textureInfos.end() - 1)->id);
+	glGenTextures(1, &lastTexInfoIt->id);
+	glBindTexture(GL_TEXTURE_2D, lastTexInfoIt->id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(textureData));
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -100,23 +101,29 @@ void OpenGLRender::addTextureFromPath(Texture texture)
 }
 
 template <typename T>
-void OpenGLRender::setBufferData(std::vector<T> verts)
+void OpenGLRender::setVertexBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices)
 {
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
 	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(T), verts.data(), GL_STATIC_DRAW);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// TODO: remove it and call that code in caller through the method - setIndexBufferData()
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
+	//glBindVertexArray(0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	setVertexAttribPointers<T>();
+
+	glBindVertexArray(0);
 }
 
-void OpenGLRender::draw()
+void OpenGLRender::draw() const
 {
 	shaderProgram.use();
 	
@@ -158,3 +165,5 @@ void OpenGLRender::deleteOpenGlRender()
 {
 	freeResources();
 }
+
+template void OpenGLRender::setVertexBufferData<Vertex>(const std::vector<Vertex>& verts, const std::vector<GLuint>& indices);

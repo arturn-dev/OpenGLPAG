@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
-set(CMAKE_CXX_STANDARD 17)
 project(OpenGLPAG VERSION 0.1)
 
 set(THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")

@@ -5,8 +5,8 @@
 
 void OpenGLCtx::prepareShaders()
 {
-    Shader vertexShader("..\\..\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
-	Shader fragmentShader("..\\..\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
+    Shader vertexShader(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
+	Shader fragmentShader(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	vertexShader.compileShader();
 	fragmentShader.compileShader();
 
@@ -21,10 +21,6 @@ OpenGLCtx::OpenGLCtx()
 	
 }
 
-OpenGLCtx::~OpenGLCtx()
-{
-}
-
 void OpenGLCtx::init()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -37,11 +33,15 @@ void OpenGLCtx::init()
 	
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
 	
-	aPos = glGetAttribLocation(shaderProgram.getProgramId(), "pos_in");
+	/*aPos = glGetAttribLocation(shaderProgram.getProgramId(), "pos_in");
     aCol = glGetAttribLocation(shaderProgram.getProgramId(), "col_in");
-    aTex = glGetAttribLocation(shaderProgram.getProgramId(), "tex_in");
+    aTex = glGetAttribLocation(shaderProgram.getProgramId(), "tex_in");*/
+	shaderProgram.setAttribPosByName("pos_in");
+	shaderProgram.setAttribColByName("col_in");
+	shaderProgram.setAttribTexByName("tex_in");
+	shaderProgram.setAttribNormByName("norm_in");
 
-	glUniform1i(shaderProgram.getUniformLocation("tex_sampler"), 0);
+	//glUniform1i(shaderProgram.getUniformLocation("tex_sampler"), 0);
 }
 
 void OpenGLCtx::render(int windowW, int windowH, 
@@ -67,6 +67,24 @@ void OpenGLCtx::render(int windowW, int windowH,
 	}
 
 	glBindVertexArray(0);
+}
+
+void OpenGLCtx::render(int windowW, int windowH, const Model* model)
+{
+	glViewport(0, 0, windowW, windowH);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	shaderProgram.use();
+
+	float ar = static_cast<float>(windowW) / static_cast<float>(windowH);
+	//projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 100.0f);
+	projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
+
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));
+	
+	model->draw();
 }
 
 GLint OpenGLCtx::getModelMatLocation() const
@@ -97,4 +115,9 @@ glm::mat4 OpenGLCtx::getViewMat() const
 const ShaderProgram& OpenGLCtx::getShaderProgram() const
 {
 	return shaderProgram;
+}
+
+void OpenGLCtx::deleteCtx()
+{
+	shaderProgram.deleteProgram();
 }

@@ -7,6 +7,7 @@
 #include "imgui_impl_opengl3.h"
 #include "OpenGLCtx.h"
 #include "MengerCube.h"
+#include "AssimpModelLoader.h"
 #include <stdio.h>
 #include <fstream>
 
@@ -166,9 +167,13 @@ int main(int, char**)
 	
     OpenGLCtx openGlCtx;
 	
+	std::unique_ptr<Model> model;
+	
 	try
-	{
+	{		
 		openGlCtx.init();
+		AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
+		model = std::make_unique<Model>(modelLoader.loadModel("earth.obj"));
 	}
 	catch (std::exception& e)
 	{
@@ -176,12 +181,16 @@ int main(int, char**)
 		return 1;
 	}
 
-    std::vector<std::unique_ptr<Object3D>> objects;
-	createMengerCubes(maxRecursionLvl, "..\\..\\res\\textures\\stone.jpg", 1.3f, openGlCtx, objects);
+    std::vector<std::unique_ptr<Model>> objects;
+	objects.push_back(std::move(model));
+	//createMengerCubes(maxRecursionLvl, ".\\res\\textures\\stone.jpg", 1.3f, openGlCtx, objects);
 
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
 	glm::vec4 userColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+	
+	
 	
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -232,9 +241,11 @@ int main(int, char**)
         xRotationVec = glm::normalize(glm::vec3(xRotationVec4.x, xRotationVec4.y, xRotationVec4.z));
         yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));
 
-		glUniform4fv(glGetUniformLocation(openGlCtx.getShaderProgram().getProgramId(), "userColor"), 1, glm::value_ptr(userColor));
+		//glUniform4fv(glGetUniformLocation(openGlCtx.getShaderProgram().getProgramId(), "userColor"), 1, glm::value_ptr(userColor));
     	
-    	openGlCtx.render(display_w, display_h, objects.begin() + recursionLvl, objects.begin() + recursionLvl + 1);
+    	//openGlCtx.render(display_w, display_h, objects.begin() + recursionLvl, objects.begin() + recursionLvl + 1);
+
+        openGlCtx.render(display_w, display_h, objects[0].get());
     	
         cursorDeltaX = 0;
         cursorDeltaY = 0;
@@ -245,6 +256,8 @@ int main(int, char**)
         glfwSwapBuffers(window);
     }
 
+    openGlCtx.deleteCtx();
+	
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

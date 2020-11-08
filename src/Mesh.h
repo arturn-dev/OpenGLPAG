@@ -27,7 +27,8 @@ public:
 		 ShaderProgram shaderProgram);
 	Mesh(const Mesh& other) = delete;
 	Mesh(Mesh&& other) noexcept;
-	//Mesh& operator=(Mesh other);
+	Mesh& operator=(Mesh&& other) noexcept;
 
+	void draw() const;
 	void deleteMesh();
 };

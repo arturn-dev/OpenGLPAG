@@ -19,21 +19,25 @@ ShaderProgram::ShaderProgram(): attribPos(-1U), attribCol(-1U), attribTex(-1U), 
 
 void ShaderProgram::setAttribPosByName(const std::string& attribPosName)
 {
+	use();
 	attribPos = glGetAttribLocation(programID, attribPosName.c_str());
 }
 
 void ShaderProgram::setAttribColByName(const std::string& attribColName)
 {
+	use();
 	attribCol = glGetAttribLocation(programID, attribColName.c_str());
 }
 
 void ShaderProgram::setAttribTexByName(const std::string& attribTexName)
 {
+	use();
 	attribTex = glGetAttribLocation(programID, attribTexName.c_str());
 }
 
 void ShaderProgram::setAttribNormByName(const std::string& attribNormName)
 {
+	use();
 	attribNorm = glGetAttribLocation(programID, attribNormName.c_str());
 }
 
@@ -62,7 +66,7 @@ void ShaderProgram::makeProgram()
 	}
 }
 
-void ShaderProgram::use()
+void ShaderProgram::use() const
 {
 	glUseProgram(programID);
 }
@@ -72,8 +76,9 @@ void ShaderProgram::deleteProgram()
 	glDeleteProgram(programID);
 }
 
-GLint ShaderProgram::getUniformLocation(const std::string& name)
+GLint ShaderProgram::getUniformLocation(const std::string& name) const
 {
+	use();
 	return glGetUniformLocation(programID, name.c_str());	
 }
 

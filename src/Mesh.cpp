@@ -2,7 +2,7 @@
 
 void Mesh::initOpenGLRender()
 {
-	openGLRender.setBufferData(vertices);
+	openGLRender.setVertexBufferData<Vertex>(vertices, indices);
 }
 
 Mesh::Mesh(VertexCollection vertices, 
@@ -14,7 +14,8 @@ Mesh::Mesh(VertexCollection vertices,
 	  vertices(std::move(vertices)),
 	  indices(std::move(indices))
 {
-	openGLRender.setBufferData(vertices);
+	openGLRender.setVertexBufferData(this->vertices, this->indices);
+	//openGLRender.setIndexBufferData(indices);
 	
 	for (auto&& tex: textures)
 	{
@@ -34,6 +35,20 @@ Mesh::Mesh(Mesh&& other) noexcept
 	  vertices(std::move(other.vertices)),
 	  indices(std::move(other.indices))
 {
+}
+
+Mesh& Mesh::operator=(Mesh&& other) noexcept
+{
+	openGLRender = std::move(other.openGLRender);
+	vertices = std::move(other.vertices);
+	indices = std::move(other.indices);
+
+	return *this;
+}
+
+void Mesh::draw() const
+{
+	openGLRender.draw();
 }
 
 void Mesh::deleteMesh()

@@ -1,6 +1,5 @@
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
 
 #include "AssimpModelLoader.h"
 
@@ -9,22 +8,27 @@
 
 void AssimpModelLoader::setModelDirPath(const std::string& modelDirPath)
 {
-	_modelDirPath = modelDirPath;
+	this->modelDirPath = modelDirPath;
 }
 
 void AssimpModelLoader::setTextureDirPath(const std::string& textureDirPath)
 {
-	_textureDirPath = textureDirPath;
+	this->textureDirPath = textureDirPath;
+}
+
+void AssimpModelLoader::setShaderProgram(ShaderProgram shaderProgram)
+{
+	this->shaderProgram = shaderProgram;
 }
 
 std::string AssimpModelLoader::getModelPath(const std::string& filename)
 {
-	return _modelDirPath + "\\" + filename;
+	return modelDirPath + "\\" + filename;
 }
 
 std::string AssimpModelLoader::getTexturePath(const std::string& filename)
 {
-	return _textureDirPath + "\\" + filename;
+	return textureDirPath + "\\" + filename;
 }
 
 MeshCollection AssimpModelLoader::processNode(aiNode* node, const aiScene* scene)
@@ -39,7 +43,8 @@ MeshCollection AssimpModelLoader::processNode(aiNode* node, const aiScene* scene
 
 	for (unsigned int i = 0; i < node->mNumChildren; ++i)
 	{
-		processNode(node->mChildren[i], scene);
+		MeshCollection&& tmp = processNode(node->mChildren[i], scene);
+		meshes.insert(meshes.end(), std::make_move_iterator(tmp.begin()), std::make_move_iterator(tmp.end()));
 	}
 
 	return meshes;
@@ -81,7 +86,7 @@ Mesh AssimpModelLoader::createMesh(aiMesh* mesh, const aiScene* scene)
 		textures.insert(textures.end(), ret.begin(), ret.end());
 	}
 
-	// TODO: return Mesh, but before it, change location of shader program
+	return Mesh(vertices, indices, textures, shaderProgram);
 }
 
 TextureCollection AssimpModelLoader::getTexturesOfType(aiMaterial* material, aiTextureType textureType,
@@ -93,10 +98,17 @@ TextureCollection AssimpModelLoader::getTexturesOfType(aiMaterial* material, aiT
 	{
 		aiString aistr;
 		material->GetTexture(textureType, i, &aistr);
-		textures.push_back({targetTextureType, std::string(aistr.C_Str())});
+		textures.push_back({targetTextureType, getTexturePath(aistr.C_Str())});
 	}
 
 	return textures;
+}
+
+AssimpModelLoader::AssimpModelLoader(const std::string& modelDirPath, const std::string& textureDirPath,
+                                     const ShaderProgram& shaderProgram): modelDirPath(modelDirPath),
+                                                                          textureDirPath(textureDirPath),
+                                                                          shaderProgram(shaderProgram)
+{
 }
 
 Model AssimpModelLoader::loadModel(const std::string& modelFilename)
@@ -109,5 +121,5 @@ Model AssimpModelLoader::loadModel(const std::string& modelFilename)
 		throw std::logic_error("[Assimp] " + std::string(importer.GetErrorString()));
 	}
 
-	processNode(scene->mRootNode, scene);
+	return Model(processNode(scene->mRootNode, scene));
 }

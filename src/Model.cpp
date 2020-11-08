@@ -9,7 +9,7 @@ Model::Model(MeshCollection meshes)
 }
 
 Model::Model(Model&& other) noexcept
-	: meshes(other.meshes), modelMat(other.modelMat)
+	: meshes(std::move(other.meshes)), modelMat(other.modelMat)
 {
 	
 }
@@ -19,5 +19,21 @@ Model::~Model()
 	for (auto&& mesh : meshes)
 	{
 		mesh.deleteMesh();
+	}
+}
+
+Model& Model::operator=(Model&& other) noexcept
+{
+	meshes = std::move(other.meshes);
+	modelMat = other.modelMat;
+
+	return *this;
+}
+
+void Model::draw() const
+{
+	for (auto&& mesh : meshes)
+	{
+		mesh.draw();
 	}
 }

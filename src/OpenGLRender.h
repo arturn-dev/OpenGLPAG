@@ -53,7 +53,7 @@ public:
 	{
 	}*/
 
-	OpenGLRender(OpenGLRender&& other) noexcept
+	OpenGLRender(OpenGLRender&& other) noexcept // TODO: move implementation to cpp file
 		: vao(other.vao),
 		  vbo(other.vbo),
 		  ebo(other.ebo),
@@ -70,12 +70,25 @@ public:
 	//	return *this;
 	//}
 
+	OpenGLRender& operator=(OpenGLRender&& other)
+	{
+		vao = other.vao;		
+		vbo = other.vbo;
+		ebo = other.ebo;
+		textureInfos = std::move(other.textureInfos);
+		shaderProgram = std::move(other.shaderProgram);
+		drawImpl = std::move(other.drawImpl);
+
+		return *this;
+	}
+
 	~OpenGLRender();
 
 	template <typename T>
-	void setBufferData(std::vector<T> verts);
+	void setVertexBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices);
+	void setIndexBufferData(const std::vector<GLuint>& indices);
 	void addTextureFromPath(Texture texture);
-	void draw();
+	void draw() const;
 
 	void deleteOpenGlRender();
 };

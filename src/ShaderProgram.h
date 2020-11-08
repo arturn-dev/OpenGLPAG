@@ -18,10 +18,10 @@ public:
 	void setAttribColByName(const std::string& attribColName);
 	void setAttribTexByName(const std::string& attribTexName);
 	void setAttribNormByName(const std::string& attribNormName);
-	void use();
+	void use() const;
 	void deleteProgram();
 
-	GLint getUniformLocation(const std::string& name);
+	GLint getUniformLocation(const std::string& name) const;
 	GLuint getProgramId() const;
 	GLuint getAttribPos() const;
 	GLuint getAttribCol() const;
