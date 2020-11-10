@@ -12,10 +12,9 @@ public:
 class ElementDraw : public DrawImpl
 {
 	GLsizei count;
-	const void* indices;
 	
 public:
-	ElementDraw(GLsizei count, const void* indices);
+	ElementDraw(GLsizei count);
 	~ElementDraw();
 	
 	void draw() override;

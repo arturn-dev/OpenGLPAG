@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include <glm/glm.hpp>
 #include <glad/glad.h>
 
 #include "ShaderProgram.h"
@@ -38,57 +39,27 @@ private:
 
 	template <typename T>
 	void setVertexAttribPointers();
+	template <typename T>
+	void setVertexBufferData(const std::vector<T>& verts);
+	void setIndexBufferData(const std::vector<GLuint>& indices);
 	void freeResources();
 
 public:
 	OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod);
-
 	OpenGLRender(const OpenGLRender& other) = delete;
-	/*	: vao(other.vao),
-		  vbo(other.vbo),
-		  ebo(other.ebo),
-		  textureInfos(other.textureInfos),
-		  shaderProgram(other.shaderProgram),
-		  drawImpl(other.drawImpl.get())
-	{
-	}*/
-
-	OpenGLRender(OpenGLRender&& other) noexcept // TODO: move implementation to cpp file
-		: vao(other.vao),
-		  vbo(other.vbo),
-		  ebo(other.ebo),
-		  textureInfos(std::move(other.textureInfos)),
-		  shaderProgram(std::move(other.shaderProgram)),
-		  drawImpl(std::move(other.drawImpl))
-	{
-	}
-
-	//OpenGLRender& operator=(OpenGLRender other)
-	//{
-	//	using std::swap;
-	//	swap(*this, other);
-	//	return *this;
-	//}
-
-	OpenGLRender& operator=(OpenGLRender&& other)
-	{
-		vao = other.vao;		
-		vbo = other.vbo;
-		ebo = other.ebo;
-		textureInfos = std::move(other.textureInfos);
-		shaderProgram = std::move(other.shaderProgram);
-		drawImpl = std::move(other.drawImpl);
-
-		return *this;
-	}
-
+	OpenGLRender(OpenGLRender&& other) noexcept;
 	~OpenGLRender();
 
+	OpenGLRender& operator=(OpenGLRender&& other) noexcept;
+
 	template <typename T>
-	void setVertexBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices);
-	void setIndexBufferData(const std::vector<GLuint>& indices);
+	void setBufferData(const std::vector<T>& verts);		
+	template <typename T>
+	void setBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices);
+	
 	void addTextureFromPath(Texture texture);
-	void draw() const;
+	void draw(const glm::mat4 modelMat) const;
 
 	void deleteOpenGlRender();
 };
+

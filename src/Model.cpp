@@ -34,6 +34,6 @@ void Model::draw() const
 {
 	for (auto&& mesh : meshes)
 	{
-		mesh.draw();
+		mesh.draw(modelMat);
 	}
 }

@@ -2,6 +2,10 @@
 
 #include <stb_image.h>
 #include <stdexcept>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "AssimpModelLoader.h"
+#include "AssimpModelLoader.h"
 #include "Vertex.h"
 
 
@@ -22,6 +26,27 @@ OpenGLRender::OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod)
 {
 }
 
+OpenGLRender::OpenGLRender(OpenGLRender&& other) noexcept: vao(other.vao),
+                                                           vbo(other.vbo),
+                                                           ebo(other.ebo),
+                                                           textureInfos(std::move(other.textureInfos)),
+                                                           shaderProgram(std::move(other.shaderProgram)),
+                                                           drawImpl(std::move(other.drawImpl))
+{
+}
+
+OpenGLRender& OpenGLRender::operator=(OpenGLRender&& other) noexcept
+{
+	vao = other.vao;
+	vbo = other.vbo;
+	ebo = other.ebo;
+	textureInfos = std::move(other.textureInfos);
+	shaderProgram = std::move(other.shaderProgram);
+	drawImpl = std::move(other.drawImpl);
+
+	return *this;
+}
+
 OpenGLRender::~OpenGLRender()
 {
 }
@@ -29,7 +54,7 @@ OpenGLRender::~OpenGLRender()
 template <>
 void OpenGLRender::setVertexAttribPointers<Vertex>()
 {
-	//glBindVertexArray(vao);
+	glBindVertexArray(vao);
 
 	GLuint attribute = shaderProgram.getAttribPos();
 	if (attribute == -1U)
@@ -56,10 +81,9 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, normal)));
 		glEnableVertexAttribArray(attribute);
-	}
+	}	
 	
-	
-	//glBindVertexArray(0);
+	glBindVertexArray(0);
 }
 
 void OpenGLRender::setIndexBufferData(const std::vector<GLuint>& indices)
@@ -71,6 +95,34 @@ void OpenGLRender::setIndexBufferData(const std::vector<GLuint>& indices)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
+}
+
+template <typename T>
+void OpenGLRender::setVertexBufferData(const std::vector<T>& verts)
+{
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(T), verts.data(), GL_STATIC_DRAW);
+	
+	glBindVertexArray(0);
+}
+
+template <typename T>
+void OpenGLRender::setBufferData(const std::vector<T>& verts)
+{
+	setVertexBufferData(verts);
+	setVertexAttribPointers<T>();
+}
+
+template <typename T>
+void OpenGLRender::setBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices)
+{
+	setVertexBufferData(verts);
+	setIndexBufferData(indices);
+	setVertexAttribPointers<T>();
 }
 
 void OpenGLRender::addTextureFromPath(Texture texture)
@@ -100,30 +152,7 @@ void OpenGLRender::addTextureFromPath(Texture texture)
 	stbi_image_free(textureData);
 }
 
-template <typename T>
-void OpenGLRender::setVertexBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices)
-{
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(T), verts.data(), GL_STATIC_DRAW);
-
-	// TODO: remove it and call that code in caller through the method - setIndexBufferData()
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-
-	//glBindVertexArray(0);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	setVertexAttribPointers<T>();
-
-	glBindVertexArray(0);
-}
-
-void OpenGLRender::draw() const
+void OpenGLRender::draw(const glm::mat4 modelMat) const
 {
 	shaderProgram.use();
 	
@@ -155,6 +184,8 @@ void OpenGLRender::draw() const
 		i++;
 	}
 
+	glUniformMatrix4fv(shaderProgram.getUniformLocation("model"), 1, GL_FALSE, glm::value_ptr(modelMat));
+	
 	glBindVertexArray(vao);
 	drawImpl->draw();
 
@@ -166,4 +197,5 @@ void OpenGLRender::deleteOpenGlRender()
 	freeResources();
 }
 
-template void OpenGLRender::setVertexBufferData<Vertex>(const std::vector<Vertex>& verts, const std::vector<GLuint>& indices);
+template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts);
+template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts, const std::vector<GLuint>& indices);

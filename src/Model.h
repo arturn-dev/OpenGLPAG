@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <glm/glm.hpp>
 
 #include "Mesh.h"
 
@@ -23,5 +22,5 @@ public:
 
 	Model& operator=(Model&& other) noexcept;
 
-	void draw() const; // TODO: pass the model matrix through the Mesh objects to the OpenGLRender object.
+	void draw() const;
 };

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <glad/glad.h>
-#include <glm/glm.hpp>
 
 #include "OpenGLRender.h"
 #include "Vertex.h"
@@ -18,7 +16,7 @@ class Mesh
 	VertexCollection vertices;
 	IndexCollection indices;
 
-	void initOpenGLRender();
+	//void initOpenGLRender();
 
 public:
 	Mesh(VertexCollection vertices, 
@@ -29,6 +27,6 @@ public:
 	Mesh(Mesh&& other) noexcept;
 	Mesh& operator=(Mesh&& other) noexcept;
 
-	void draw() const;
+	void draw(const glm::mat4) const;
 	void deleteMesh();
 };

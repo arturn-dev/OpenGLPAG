@@ -11,8 +11,8 @@ DrawImpl::~DrawImpl()
 {
 }
 
-ElementDraw::ElementDraw(GLsizei count, const void* indices) // TODO: Remove indices ptr or element buffer
-	: count(count), indices(indices)
+ElementDraw::ElementDraw(GLsizei count)
+	: count(count)
 {
 }
 
