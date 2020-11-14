@@ -21,7 +21,7 @@ class ColCuboid : public Cuboid, public ColObject3D
 {
 	
 protected:
-	void internalDraw();
+	void internalDraw() const;
 	void createVertexArray(std::vector<ColVert>& verts) override;
 	
 public:
@@ -30,14 +30,14 @@ public:
 
 	static ColCuboid* createCube(GLint modelMatLocation, GLuint aPos, GLuint aCol, float edgeLength);
 
-	virtual void draw() override;
+	virtual void draw() const override;
 };
 
 class TexCuboid : public Cuboid, public TexObject3D
 {
 	
 protected:
-	void internalDraw();
+	void internalDraw() const;
 	void createVertexArray(std::vector<TexVert>& verts) override;
 	
 public:
@@ -46,5 +46,5 @@ public:
 
 	static TexCuboid* createCube(GLint modelMatLocation, const std::string& texturePath, GLuint aPos, GLuint aTex, float edgeLength);
 
-	virtual void draw() override;
+	virtual void draw() const override;
 };

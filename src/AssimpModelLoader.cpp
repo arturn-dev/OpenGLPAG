@@ -67,7 +67,7 @@ Mesh AssimpModelLoader::createMesh(aiMesh* mesh, const aiScene* scene)
 
 		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i], texCoords);
 	}
-
+	
 	// Populate index collection.
 	for(unsigned int i = 0; i < mesh->mNumFaces; i++)
     {

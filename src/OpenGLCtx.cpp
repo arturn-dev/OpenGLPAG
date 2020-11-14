@@ -29,7 +29,7 @@ void OpenGLCtx::init()
 	prepareShaders();
 	shaderProgram.use();
 
-	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -3.0f));
+	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -20.0f));
 	
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
 	
@@ -44,9 +44,7 @@ void OpenGLCtx::init()
 	//glUniform1i(shaderProgram.getUniformLocation("tex_sampler"), 0);
 }
 
-void OpenGLCtx::render(int windowW, int windowH, 
-					   const std::vector<std::unique_ptr<Object3D>>::iterator objectsStartIt,
-				       const std::vector<std::unique_ptr<Object3D>>::iterator objectsEndIt)
+void OpenGLCtx::renderInit(int windowW, int windowH)
 {
 	glViewport(0, 0, windowW, windowH);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -60,6 +58,13 @@ void OpenGLCtx::render(int windowW, int windowH,
 	projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
 
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));
+}
+
+void OpenGLCtx::render(int windowW, int windowH, 
+                       const std::vector<std::unique_ptr<Object3D>>::iterator objectsStartIt,
+                       const std::vector<std::unique_ptr<Object3D>>::iterator objectsEndIt)
+{
+	renderInit(windowW, windowH);
 	
 	for (auto it = objectsStartIt; it < objectsEndIt; ++it)
 	{
@@ -71,20 +76,16 @@ void OpenGLCtx::render(int windowW, int windowH,
 
 void OpenGLCtx::render(int windowW, int windowH, const Model* model)
 {
-	glViewport(0, 0, windowW, windowH);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	shaderProgram.use();
-
-	float ar = static_cast<float>(windowW) / static_cast<float>(windowH);
-	//projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 100.0f);
-	projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
-
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));
+	renderInit(windowW, windowH);
 	
 	model->draw();
+}
+
+void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot)
+{
+	renderInit(windowW, windowH);
+
+	sceneGraphRoot->draw();
 }
 
 GLint OpenGLCtx::getModelMatLocation() const

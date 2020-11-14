@@ -8,6 +8,7 @@
 #include "ShaderProgram.h"
 #include "Object3D.h"
 #include "Model.h"
+#include "SceneGraphNode.h"
 
 class OpenGLCtx
 {
@@ -16,6 +17,7 @@ class OpenGLCtx
 	GLuint aPos, aCol, aTex;
 	
 	void prepareShaders();
+	void renderInit(int windowW, int windowH);
 
 public:
 	OpenGLCtx();
@@ -25,6 +27,7 @@ public:
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsStartIt,
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsEndIt);
 	void render(int windowW, int windowH, const Model* model);
+	void render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot);
 
 	GLint getModelMatLocation() const;
 	GLuint getAPos() const;

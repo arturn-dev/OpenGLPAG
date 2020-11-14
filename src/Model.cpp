@@ -3,13 +3,13 @@
 #include <utility>
 
 Model::Model(MeshCollection meshes)
-	: meshes(std::move(meshes)), modelMat(glm::mat4(1.0f))
+	: Object3D(TMat()), meshes(std::move(meshes))
 {
 
 }
 
 Model::Model(Model&& other) noexcept
-	: meshes(std::move(other.meshes)), modelMat(other.modelMat)
+	: Object3D(other.modelMat), meshes(std::move(other.meshes))
 {
 	
 }
@@ -34,6 +34,6 @@ void Model::draw() const
 {
 	for (auto&& mesh : meshes)
 	{
-		mesh.draw(modelMat);
+		mesh.draw(modelMat.getTMat());
 	}
 }

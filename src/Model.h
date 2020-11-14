@@ -2,25 +2,35 @@
 
 #include <vector>
 
+#include "Object3D.h"
 #include "Mesh.h"
 
 typedef std::vector<Mesh> MeshCollection;
 
-class Model
+class Model : public Object3D
 {
-public:
-	glm::mat4 modelMat;
-	
-private:
 	MeshCollection meshes;
 
 public:
 	explicit Model(MeshCollection meshes);
 	Model(const Model& other) = delete;
 	Model(Model&& other) noexcept;
-	~Model();
+	virtual ~Model();
 
 	Model& operator=(Model&& other) noexcept;
 
-	void draw() const;
+	void draw() const override;
+
+	// Temporary methods for compilation correctness
+
+protected:
+	void initBuffers() override
+	{
+		
+	}
+	
+	void deleteBuffers() override
+	{
+		
+	}
 };

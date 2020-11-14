@@ -6,6 +6,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "OpenGLCtx.h"
+#include "MengerCube.h"
 #include "AssimpModelLoader.h"
 #include <stdio.h>
 #include <fstream>
@@ -31,6 +32,18 @@
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+void createMengerCubes(int maxRecursionLvl, const std::string& texturePath, float edgeLength, const OpenGLCtx& openGlCtx, std::vector<std::unique_ptr<Object3D>>& objects)
+{
+	MengerCubeFragmentsCache mengerCubeFragments(maxRecursionLvl);
+
+	for (int i = 0; i <= maxRecursionLvl; ++i)
+	{
+		objects.push_back(std::unique_ptr<Object3D>(
+            new TexMengerCube(mengerCubeFragments, i, edgeLength, openGlCtx.getModelMatLocation(), texturePath, openGlCtx.getAPos(), openGlCtx.getATex())
+        ));
+	}
 }
 
 bool init = true;
@@ -154,15 +167,13 @@ int main(int, char**)
 	
     OpenGLCtx openGlCtx;
 	
-	std::unique_ptr<Object3D> model;
-	
-	std::unique_ptr<AssimpModelLoader> modelLoader;
+	std::unique_ptr<Model> model;
 	
 	try
 	{		
 		openGlCtx.init();
-		modelLoader = std::make_unique<AssimpModelLoader>(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
-		model = std::make_unique<Model>(modelLoader->loadModel("earth.obj"));
+		AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
+		model = std::make_unique<Model>(modelLoader.loadModel("earth.obj"));
 	}
 	catch (std::exception& e)
 	{
@@ -170,20 +181,12 @@ int main(int, char**)
 		return 1;
 	}
 
-    SceneGraphNode solarSystemNode = SceneGraphNode();
-	solarSystemNode.attachChildren(SceneGraphNode(std::move(model)));
-	SceneGraphNode earthOrbitNode = SceneGraphNode();
-	SceneGraphNode childNode(std::make_unique<Model>(modelLoader->loadModel("earth.obj")));
-	childNode.localMat.translate(glm::vec3(0.5f, 0.0f, 0.0f));
-	earthOrbitNode.attachChildren(std::move(childNode));
-	solarSystemNode.attachChildren(std::move(earthOrbitNode));
-	
-    
-	/*model->modelMat.rotate(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	model->modelMat.translate(glm::vec3(0.3f, 0.0f, 0.0f));
+	model->modelMat.rotate(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f),);
+	model->modelMat.translate(glm::vec3(0.3f, 0.0f, 0.0f),);
 	
     std::vector<std::unique_ptr<Model>> objects;
-	objects.push_back(std::move(model));*/
+	objects.push_back(std::move(model));
+	//createMengerCubes(maxRecursionLvl, ".\\res\\textures\\stone.jpg", 1.3f, openGlCtx, objects);
 
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
@@ -227,10 +230,10 @@ int main(int, char**)
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
     	
-        /*for (auto&& object : objects)
+        for (auto&& object : objects)
         {
-        	object->modelMat.rotate(glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec);
-        	object->modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
+        	object->modelMat.rotate(glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec,);
+        	object->modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec,);
         }
         
     	glm::mat4 rotationMat = glm::inverse(objects[0]->modelMat.getTMat()) * glm::inverse(openGlCtx.getViewMat());
@@ -239,14 +242,13 @@ int main(int, char**)
         glm::vec4 yRotationVec4 = rotationMat * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     	
         xRotationVec = glm::normalize(glm::vec3(xRotationVec4.x, xRotationVec4.y, xRotationVec4.z));
-        yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));*/
+        yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));
 
-        //openGlCtx.render(display_w, display_h, objects[0].get());
-
-        solarSystemNode.localMat.rotate(0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
-    	//sceneGraphRoot.localMat.translate(glm::vec3(0.005f, 0.0f, 0.0f));
+		//glUniform4fv(glGetUniformLocation(openGlCtx.getShaderProgram().getProgramId(), "userColor"), 1, glm::value_ptr(userColor));
     	
-    	openGlCtx.render(display_w, display_h, &solarSystemNode);
+    	//openGlCtx.render(display_w, display_h, objects.begin() + recursionLvl, objects.begin() + recursionLvl + 1);
+
+        openGlCtx.render(display_w, display_h, objects[0].get());
     	
         cursorDeltaX = 0;
         cursorDeltaY = 0;

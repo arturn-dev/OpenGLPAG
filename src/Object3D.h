@@ -4,7 +4,8 @@
 #include <vector>
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
+
+#include "TMat.h"
 
 struct ColVert
 {
@@ -40,10 +41,10 @@ struct TexVert
 	{}
 };
 
-class Object3D
+class Object3D // TODO: Remove all OpenGL related functions and variables. Use the OpenGLRender class instead.
 {
 public:
-	glm::mat4 modelMat = glm::mat4(1.0f);
+	TMat modelMat;
 
 protected:
 	GLuint vao, vbo;
@@ -53,10 +54,12 @@ protected:
 	virtual void deleteBuffers() = 0;
 
 public:
+	Object3D() {}
 	Object3D(GLint modelMatLocation);
+	Object3D(const TMat& modelMat) : modelMat(modelMat) {}
 	virtual ~Object3D();
-
-	virtual void draw() = 0;
+	
+	virtual void draw() const = 0;
 
 	GLuint getVao() const;
 	GLint getModelMatLocation() const;
@@ -74,7 +77,7 @@ public:
 	ColObject3D(GLint modelMatLocation);
 	virtual ~ColObject3D();
 	
-	void draw() = 0;	
+	void draw() const = 0;	
 };
 
 class TexObject3D : public Object3D
@@ -95,5 +98,5 @@ public:
 	TexObject3D(GLint modelMatLocation, const std::string& texturePath);
 	virtual ~TexObject3D();
 	
-	void draw() = 0;	
+	void draw() const = 0;	
 };

@@ -82,14 +82,14 @@ ColCuboid* ColCuboid::createCube(GLint modelMatLocation, GLuint aPos, GLuint aCo
 	return new ColCuboid(modelMatLocation, aPos, aCol, glm::vec3(edgeLength, edgeLength, edgeLength));
 }
 
-void ColCuboid::draw()
+void ColCuboid::draw() const
 {
 	glBindVertexArray(getVao());
-	glUniformMatrix4fv(getModelMatLocation(), 1, GL_FALSE, glm::value_ptr(modelMat));
+	glUniformMatrix4fv(getModelMatLocation(), 1, GL_FALSE, glm::value_ptr(modelMat.getTMat()));
 	internalDraw();
 }
 
-void ColCuboid::internalDraw()
+void ColCuboid::internalDraw() const
 {
 	glMultiDrawArrays(GL_TRIANGLE_STRIP, sidesIndices, indicesCounts, sizeof(sidesIndices) / sizeof(GLint));
 }
@@ -156,14 +156,14 @@ TexCuboid* TexCuboid::createCube(GLint modelMatLocation, const std::string& text
 	return new TexCuboid(modelMatLocation, texturePath, aPos, aTex, glm::vec3(edgeLength, edgeLength, edgeLength));
 }
 
-void TexCuboid::draw()
+void TexCuboid::draw() const
 {
 	glBindVertexArray(getVao());
-	glUniformMatrix4fv(getModelMatLocation(), 1, GL_FALSE, glm::value_ptr(modelMat));
+	glUniformMatrix4fv(getModelMatLocation(), 1, GL_FALSE, glm::value_ptr(modelMat.getTMat()));
 	internalDraw();
 }
 
-void TexCuboid::internalDraw()
+void TexCuboid::internalDraw() const
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
