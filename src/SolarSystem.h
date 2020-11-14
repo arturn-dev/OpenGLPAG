@@ -4,23 +4,52 @@
 
 class ShaderProgram;
 
-struct CelestialBody
+struct SolarSystemElement
 {
-	SceneGraphNode& objectNode;
+	enum ElementType
+	{
+		ElementOrbit,
+		ElementBody
+	};
+	
+	ElementType type;	
+	SceneGraphNode* objectNode;
 	float orbitRadius;
 	float bodyScale;
 	glm::vec3 rotAxis;
+
+	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode)
+		: SolarSystemElement(elementType, objectNode, 0.0f, 1.0f, glm::vec3())
+	{
+	}
+
+	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode, float orbitRadius)
+		: SolarSystemElement(elementType, objectNode, orbitRadius, 1.0f, glm::vec3())
+	{
+	}
+
+	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode, float orbitRadius, float bodyScale,
+	                   glm::vec3 rotAxis)
+		                   : type(elementType), objectNode(objectNode), orbitRadius(orbitRadius), bodyScale(bodyScale), rotAxis(rotAxis)
+	{
+	}
 };
 
 class SolarSystem : public Object3D
 {
-	std::vector<CelestialBody> celestialBodies;
+	std::vector<SolarSystemElement> solarSystemElements;
+	SceneGraphNode rootNode;
 
-	void initCelestialBodies();
-	
+	void initElements();
+
+	// Temporary
+protected:
+	void initBuffers() override {}
+	void deleteBuffers() override {}
+	//
 public:
-	SolarSystem(ShaderProgram shaderProgram, TMat modelMat = glm::mat4(1.0f));
+	SolarSystem(const ShaderProgram& shaderProgram, TMat modelMat = glm::mat4(1.0f));
 
 	void animate();
-	void draw();
+	void draw() override;
 };

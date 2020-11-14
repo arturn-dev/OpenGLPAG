@@ -59,7 +59,7 @@ public:
 	Object3D(const TMat& modelMat) : modelMat(modelMat) {}
 	virtual ~Object3D();
 	
-	virtual void draw() const = 0;
+	virtual void draw() = 0;
 
 	GLuint getVao() const;
 	GLint getModelMatLocation() const;
@@ -77,7 +77,7 @@ public:
 	ColObject3D(GLint modelMatLocation);
 	virtual ~ColObject3D();
 	
-	void draw() const = 0;	
+	void draw() = 0;	
 };
 
 class TexObject3D : public Object3D
@@ -98,5 +98,5 @@ public:
 	TexObject3D(GLint modelMatLocation, const std::string& texturePath);
 	virtual ~TexObject3D();
 	
-	void draw() const = 0;	
+	void draw() = 0;	
 };

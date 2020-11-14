@@ -18,7 +18,7 @@ void SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
 
 	for (auto&& children : childrens)
 	{
-		children.draw(object->modelMat, dirtyFlag);
+		children->draw(object->modelMat, dirtyFlag);
 	}
 }
 
@@ -32,9 +32,11 @@ SceneGraphNode::SceneGraphNode(std::unique_ptr<Object3D> object)
 {
 }
 
-SceneGraphNode& SceneGraphNode::attachChildren(SceneGraphNode&& childNode)
+SceneGraphNode* SceneGraphNode::attachChildren(std::unique_ptr<SceneGraphNode> childNode)
 {
 	childrens.push_back(std::move(childNode));
+
+	return (childrens.end() - 1)->get();
 }
 
 void SceneGraphNode::draw()

@@ -58,7 +58,7 @@ public:
 	void setBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices);
 	
 	void addTextureFromPath(Texture texture);
-	void draw(const glm::mat4 modelMat) const;
+	void draw(const glm::mat4 modelMat);
 
 	void deleteOpenGlRender();
 };

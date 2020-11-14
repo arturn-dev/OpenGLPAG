@@ -1,6 +1,4 @@
 #include <assimp/postprocess.h>
-
-
 #include "AssimpModelLoader.h"
 
 #include <stdexcept>

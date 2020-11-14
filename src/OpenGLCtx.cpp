@@ -29,7 +29,7 @@ void OpenGLCtx::init()
 	prepareShaders();
 	shaderProgram.use();
 
-	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -20.0f));
+	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -30.0f));	
 	
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
 	
@@ -54,8 +54,8 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	shaderProgram.use();
 
 	float ar = static_cast<float>(windowW) / static_cast<float>(windowH);
-	//projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 100.0f);
-	projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
+	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 100.0f);
+	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
 
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));
 }
@@ -74,11 +74,11 @@ void OpenGLCtx::render(int windowW, int windowH,
 	glBindVertexArray(0);
 }
 
-void OpenGLCtx::render(int windowW, int windowH, const Model* model)
+void OpenGLCtx::render(int windowW, int windowH, Object3D* object)
 {
 	renderInit(windowW, windowH);
 	
-	model->draw();
+	object->draw();
 }
 
 void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot)

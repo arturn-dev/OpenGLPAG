@@ -38,7 +38,7 @@ ColMengerCube::~ColMengerCube()
 {
 }
 
-void ColMengerCube::draw() const
+void ColMengerCube::draw()
 {
 	const float threeToNth = pow(3.0f, static_cast<float>(n));
 	const float fragmentSize = edgeLength / threeToNth;
@@ -69,7 +69,7 @@ TexMengerCube::~TexMengerCube()
 {
 }
 
-void TexMengerCube::draw() const
+void TexMengerCube::draw()
 {
 	const float threeToNth = pow(3.0f, static_cast<float>(n));
 	const float fragmentSize = edgeLength / threeToNth;

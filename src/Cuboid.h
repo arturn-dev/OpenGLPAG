@@ -30,7 +30,7 @@ public:
 
 	static ColCuboid* createCube(GLint modelMatLocation, GLuint aPos, GLuint aCol, float edgeLength);
 
-	virtual void draw() const override;
+	virtual void draw() override;
 };
 
 class TexCuboid : public Cuboid, public TexObject3D
@@ -46,5 +46,5 @@ public:
 
 	static TexCuboid* createCube(GLint modelMatLocation, const std::string& texturePath, GLuint aPos, GLuint aTex, float edgeLength);
 
-	virtual void draw() const override;
+	virtual void draw() override;
 };

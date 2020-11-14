@@ -27,6 +27,6 @@ public:
 	Mesh(Mesh&& other) noexcept;
 	Mesh& operator=(Mesh&& other) noexcept;
 
-	void draw(const glm::mat4) const;
+	void draw(const glm::mat4);
 	void deleteMesh();
 };

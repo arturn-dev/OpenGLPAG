@@ -12,7 +12,7 @@ protected:
 	void initBuffers() override {}
 	void deleteBuffers() override {}
 public:
-	void draw() const override {}
+	void draw() override {}
 };
 
 class SceneGraphNode
@@ -22,7 +22,7 @@ public:
 
 private:	
 	std::unique_ptr<Object3D> object;
-	std::vector<SceneGraphNode> childrens;
+	std::vector<std::unique_ptr<SceneGraphNode>> childrens;
 
 	void draw(TMat parentModelMat, bool dirtyFlag);
 
@@ -30,6 +30,6 @@ public:
 	SceneGraphNode();
 	SceneGraphNode(std::unique_ptr<Object3D> object);
 
-	SceneGraphNode& attachChildren(SceneGraphNode&& childNode);
+	SceneGraphNode* attachChildren(std::unique_ptr<SceneGraphNode> childNode);
 	void draw();
 };

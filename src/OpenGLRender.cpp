@@ -5,7 +5,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "AssimpModelLoader.h"
-#include "AssimpModelLoader.h"
 #include "Vertex.h"
 
 
@@ -152,7 +151,7 @@ void OpenGLRender::addTextureFromPath(Texture texture)
 	stbi_image_free(textureData);
 }
 
-void OpenGLRender::draw(const glm::mat4 modelMat) const
+void OpenGLRender::draw(const glm::mat4 modelMat)
 {
 	shaderProgram.use();
 	

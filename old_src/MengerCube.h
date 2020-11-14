@@ -23,7 +23,7 @@ public:
 				  GLint modelMatLocation, GLuint aPos, GLuint aCol);
 	~ColMengerCube();
 
-	void draw() const override;
+	void draw() override;
 };
 
 class TexMengerCube : public MengerCube, public TexCuboid
@@ -34,5 +34,5 @@ public:
 				  GLint modelMatLocation, const std::string& texturePath, GLuint aPos, GLuint aTex);
 	~TexMengerCube();
 
-	void draw() const override;
+	void draw() override;
 };

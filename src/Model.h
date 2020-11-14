@@ -19,7 +19,7 @@ public:
 
 	Model& operator=(Model&& other) noexcept;
 
-	void draw() const override;
+	void draw() override;
 
 	// Temporary methods for compilation correctness
 

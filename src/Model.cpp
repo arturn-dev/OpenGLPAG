@@ -30,7 +30,7 @@ Model& Model::operator=(Model&& other) noexcept
 	return *this;
 }
 
-void Model::draw() const
+void Model::draw()
 {
 	for (auto&& mesh : meshes)
 	{

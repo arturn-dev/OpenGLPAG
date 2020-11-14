@@ -6,7 +6,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "OpenGLCtx.h"
-#include "AssimpModelLoader.h"
+#include "SolarSystem.h"
 #include <stdio.h>
 #include <fstream>
 
@@ -154,15 +154,15 @@ int main(int, char**)
 	
     OpenGLCtx openGlCtx;
 	
-	std::unique_ptr<Object3D> model;
+	//std::unique_ptr<Object3D> model;
 	
-	std::unique_ptr<AssimpModelLoader> modelLoader;
+	//std::unique_ptr<AssimpModelLoader> modelLoader;
 	
 	try
 	{		
 		openGlCtx.init();
-		modelLoader = std::make_unique<AssimpModelLoader>(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
-		model = std::make_unique<Model>(modelLoader->loadModel("earth.obj"));
+		//modelLoader = std::make_unique<AssimpModelLoader>(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
+		//model = std::make_unique<Model>(modelLoader->loadModel("earth.obj"));
 	}
 	catch (std::exception& e)
 	{
@@ -170,13 +170,14 @@ int main(int, char**)
 		return 1;
 	}
 
-    SceneGraphNode solarSystemNode = SceneGraphNode();
+	SolarSystem solarSystem(openGlCtx.getShaderProgram());
+    /*SceneGraphNode solarSystemNode = SceneGraphNode();
 	solarSystemNode.attachChildren(SceneGraphNode(std::move(model)));
 	SceneGraphNode earthOrbitNode = SceneGraphNode();
 	SceneGraphNode childNode(std::make_unique<Model>(modelLoader->loadModel("earth.obj")));
 	childNode.localMat.translate(glm::vec3(0.5f, 0.0f, 0.0f));
 	earthOrbitNode.attachChildren(std::move(childNode));
-	solarSystemNode.attachChildren(std::move(earthOrbitNode));
+	solarSystemNode.attachChildren(std::move(earthOrbitNode));*/
 	
     
 	/*model->modelMat.rotate(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -243,11 +244,13 @@ int main(int, char**)
 
         //openGlCtx.render(display_w, display_h, objects[0].get());
 
-        solarSystemNode.localMat.rotate(0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+        //solarSystemNode.localMat.rotate(0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
     	//sceneGraphRoot.localMat.translate(glm::vec3(0.005f, 0.0f, 0.0f));
     	
-    	openGlCtx.render(display_w, display_h, &solarSystemNode);
-    	
+    	//openGlCtx.render(display_w, display_h, &solarSystemNode);
+    	solarSystem.animate();
+    	openGlCtx.render(display_w, display_h, &solarSystem);
+    	    	
         cursorDeltaX = 0;
         cursorDeltaY = 0;
     	

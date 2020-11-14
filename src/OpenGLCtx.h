@@ -26,7 +26,7 @@ public:
 	void render(int windowW, int windowH, 
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsStartIt,
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsEndIt);
-	void render(int windowW, int windowH, const Model* model);
+	void render(int windowW, int windowH, Object3D* object);
 	void render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot);
 
 	GLint getModelMatLocation() const;

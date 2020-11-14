@@ -82,7 +82,7 @@ ColCuboid* ColCuboid::createCube(GLint modelMatLocation, GLuint aPos, GLuint aCo
 	return new ColCuboid(modelMatLocation, aPos, aCol, glm::vec3(edgeLength, edgeLength, edgeLength));
 }
 
-void ColCuboid::draw() const
+void ColCuboid::draw()
 {
 	glBindVertexArray(getVao());
 	glUniformMatrix4fv(getModelMatLocation(), 1, GL_FALSE, glm::value_ptr(modelMat.getTMat()));
@@ -156,7 +156,7 @@ TexCuboid* TexCuboid::createCube(GLint modelMatLocation, const std::string& text
 	return new TexCuboid(modelMatLocation, texturePath, aPos, aTex, glm::vec3(edgeLength, edgeLength, edgeLength));
 }
 
-void TexCuboid::draw() const
+void TexCuboid::draw()
 {
 	glBindVertexArray(getVao());
 	glUniformMatrix4fv(getModelMatLocation(), 1, GL_FALSE, glm::value_ptr(modelMat.getTMat()));
