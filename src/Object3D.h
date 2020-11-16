@@ -74,6 +74,7 @@ protected:
 	virtual void createVertexArray(std::vector<ColVert>& verts) = 0;
 	
 public:
+	ColObject3D() : Object3D() {}
 	ColObject3D(GLint modelMatLocation);
 	virtual ~ColObject3D();
 	

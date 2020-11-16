@@ -1,7 +1,7 @@
 #include "SolarSystem.h"
 
 #include "AssimpModelLoader.h"
-#include "Cuboid.h"
+#include "Cylinder.h"
 
 void SolarSystem::initElements()
 {
@@ -54,7 +54,7 @@ SolarSystem::SolarSystem(const ShaderProgram& shaderProgram, TMat modelMat)
 								     orbitRadius, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 	solarSystemElements.emplace_back(SolarSystemElement::ElementBody,
 									 moon1OrbitNode->attachChildren(
-										std::make_unique<SceneGraphNode>(std::unique_ptr<Object3D>(ColCuboid::createCube(shaderProgram.getUniformLocation("model"), shaderProgram.getAttribPos(), shaderProgram.getAttribCol(), 1.0f)))), 
+										NODE_FROM_MODEL(Cylinder(10, 10.0f, 2.0f, shaderProgram))), 
 								     orbitRadius/5, 0.5f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 	solarSystemElements.emplace_back(SolarSystemElement::ElementOrbit,

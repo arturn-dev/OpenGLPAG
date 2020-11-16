@@ -20,6 +20,11 @@ void OpenGLRender::freeResources()
 	glDeleteVertexArrays(1, &vao);
 }
 
+OpenGLRender::OpenGLRender(ShaderProgram shaderProgram)
+	: OpenGLRender(shaderProgram, nullptr)
+{
+}
+
 OpenGLRender::OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod)
 	: shaderProgram(shaderProgram), drawImpl(drawMethod)
 {
@@ -63,12 +68,13 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 	glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, pos)));
 	glEnableVertexAttribArray(attribute);
-
+	
 	attribute = shaderProgram.getAttribTex();
 	if (attribute == -1U)
 	{
 		throw std::logic_error("Location of vertex's texture coordinates attribute is unknown in the shader program.");
 	}
+
 	glVertexAttribPointer(attribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, tex)));
 	glEnableVertexAttribArray(attribute);
@@ -76,12 +82,38 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 	attribute = shaderProgram.getAttribNorm();
 	if (attribute != -1U)
 	{
-		//throw std::logic_error("Location of vertex's normal coordinates attribute is unknown in the shader program.");
 		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, normal)));
 		glEnableVertexAttribArray(attribute);
 	}	
 	
+	glBindVertexArray(0);
+}
+
+template<>
+void OpenGLRender::setVertexAttribPointers<ColVert>()
+{
+	glBindVertexArray(vao);
+
+	GLuint attribute = shaderProgram.getAttribPos();
+	if (attribute == -1U)
+	{
+		throw std::logic_error("Location of vertex's position attribute is unknown in the shader program.");
+	}
+	glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(ColVert), 
+						  reinterpret_cast<const void*>(offsetof(ColVert, pos)));
+	glEnableVertexAttribArray(attribute);
+
+	attribute = shaderProgram.getAttribCol();
+	if (attribute == -1U)
+	{
+		throw std::logic_error("Location of vertex's color attribute is unknown in the shader program.");
+	}
+
+	glVertexAttribPointer(attribute, 4, GL_FLOAT, GL_FALSE, sizeof(ColVert),
+		                      reinterpret_cast<const void*>(offsetof(ColVert, col)));
+	glEnableVertexAttribArray(attribute);
+
 	glBindVertexArray(0);
 }
 
@@ -153,6 +185,11 @@ void OpenGLRender::addTextureFromPath(Texture texture)
 
 void OpenGLRender::draw(const glm::mat4 modelMat)
 {
+	if (drawImpl == nullptr)
+	{
+		throw std::logic_error("No draw implementation was set.");
+	}
+	
 	shaderProgram.use();
 	
 	auto i = 0;
@@ -198,3 +235,5 @@ void OpenGLRender::deleteOpenGlRender()
 
 template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts);
 template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts, const std::vector<GLuint>& indices);
+template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts);
+template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts, const std::vector<GLuint>& indices);

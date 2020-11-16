@@ -25,6 +25,8 @@ public:
 		std::string path;
 	};
 
+	std::unique_ptr<DrawImpl> drawImpl;
+	
 private:
 	struct TextureInfo
 	{
@@ -35,7 +37,7 @@ private:
 	GLuint vao, vbo, ebo;
 	std::vector<TextureInfo> textureInfos;
 	ShaderProgram shaderProgram;
-	std::unique_ptr<DrawImpl> drawImpl;
+	
 
 	template <typename T>
 	void setVertexAttribPointers();
@@ -45,6 +47,7 @@ private:
 	void freeResources();
 
 public:
+	explicit OpenGLRender(ShaderProgram shaderProgram);
 	OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod);
 	OpenGLRender(const OpenGLRender& other) = delete;
 	OpenGLRender(OpenGLRender&& other) noexcept;

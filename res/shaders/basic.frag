@@ -10,5 +10,5 @@ uniform vec4 userColor;
 
 void main()
 {
-	col_out = texture(texture_diffuse1, tex);
+	col_out = texture(texture_diffuse1, tex) + col;
 }
