@@ -7,7 +7,6 @@
 
 #include "ShaderProgram.h"
 #include "Object3D.h"
-#include "Model.h"
 #include "SceneGraphNode.h"
 
 class OpenGLCtx
@@ -34,6 +33,8 @@ public:
 	GLuint getACol() const;
 	GLuint getATex() const;
 	glm::mat4 getViewMat() const;
+
+	void setViewMat(const glm::mat4& viewMat);
 	const ShaderProgram& getShaderProgram() const;
 
 	void deleteCtx();

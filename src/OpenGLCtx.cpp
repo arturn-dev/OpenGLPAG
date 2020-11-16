@@ -29,9 +29,8 @@ void OpenGLCtx::init()
 	prepareShaders();
 	shaderProgram.use();
 
-	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -30.0f));	
-	
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
+	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -30.0f));
+	viewMat = glm::rotate(viewMat, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));	
 	
 	/*aPos = glGetAttribLocation(shaderProgram.getProgramId(), "pos_in");
     aCol = glGetAttribLocation(shaderProgram.getProgramId(), "col_in");
@@ -56,7 +55,8 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	float ar = static_cast<float>(windowW) / static_cast<float>(windowH);
 	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 100.0f);
 	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
-
+	
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));
 }
 
@@ -111,6 +111,11 @@ GLuint OpenGLCtx::getATex() const
 glm::mat4 OpenGLCtx::getViewMat() const
 {
 	return viewMat;
+}
+
+void OpenGLCtx::setViewMat(const glm::mat4& viewMat)
+{
+	this->viewMat = viewMat;
 }
 
 const ShaderProgram& OpenGLCtx::getShaderProgram() const

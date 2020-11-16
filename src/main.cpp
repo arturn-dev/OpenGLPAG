@@ -36,10 +36,12 @@ static void glfw_error_callback(int error, const char* description)
 bool init = true;
 
 const float mouseSensitivity = 0.1f;
+const float scrollSensitivity = 2.0f;
 float cursorLastX = 0;
 float cursorLastY = 0;
 float cursorDeltaX = 0;
 float cursorDeltaY = 0;
+float scrollDelta = 0;
 
 void mouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
@@ -66,6 +68,11 @@ void mouseCallback(GLFWwindow* window, double xPos, double yPos)
 
 	cursorLastX = xPosf;
 	cursorLastY = yPosf;
+}
+
+void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	scrollDelta = static_cast<float>(yoffset);
 }
 
 int main(int, char**)
@@ -102,6 +109,7 @@ int main(int, char**)
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 	glfwSetCursorPosCallback(window, mouseCallback);
+	
 
     // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
@@ -191,7 +199,7 @@ int main(int, char**)
 	glm::vec4 userColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	
-	
+	glfwSetScrollCallback(window, mouseScrollCallback);
 	
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -234,13 +242,19 @@ int main(int, char**)
         	object->modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
         }
         
-    	glm::mat4 rotationMat = glm::inverse(objects[0]->modelMat.getTMat()) * glm::inverse(openGlCtx.getViewMat());
+    	glm::mat4 rotationMat = glm::inverse(objects[0]->modelMat.getTMat()) * glm::inverse(openGlCtx.getViewMat());*/
+
+    	solarSystem.modelMat.rotate(glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec);
+    	solarSystem.modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
+    	glm::mat4 rotationMat = glm::inverse(solarSystem.modelMat.getTMat()) * glm::inverse(openGlCtx.getViewMat());
 
     	glm::vec4 xRotationVec4 = rotationMat * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
         glm::vec4 yRotationVec4 = rotationMat * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     	
         xRotationVec = glm::normalize(glm::vec3(xRotationVec4.x, xRotationVec4.y, xRotationVec4.z));
-        yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));*/
+        yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));
+
+    	openGlCtx.setViewMat(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, scrollDelta * scrollSensitivity)) * openGlCtx.getViewMat());
 
         //openGlCtx.render(display_w, display_h, objects[0].get());
 
@@ -253,6 +267,7 @@ int main(int, char**)
     	    	
         cursorDeltaX = 0;
         cursorDeltaY = 0;
+    	scrollDelta = 0;
     	
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

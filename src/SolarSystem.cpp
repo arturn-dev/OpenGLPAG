@@ -1,6 +1,7 @@
 #include "SolarSystem.h"
 
 #include "AssimpModelLoader.h"
+#include "Cuboid.h"
 
 void SolarSystem::initElements()
 {
@@ -15,7 +16,7 @@ void SolarSystem::initElements()
 		{
 			case SolarSystemElement::ElementOrbit:
 			{
-				//element.objectNode.localMat.translate(glm::vec3(element.orbitRadius, 0.0f, 0.0f));
+				element.objectNode->localMat.translate(glm::vec3(element.orbitRadius, 0.0f, 0.0f));
 			}
 			break;
 			case SolarSystemElement::ElementBody:
@@ -33,21 +34,32 @@ SolarSystem::SolarSystem(const ShaderProgram& shaderProgram, TMat modelMat)
 {
 	// TODO: Get textures for orbits i.e. new method in AssimpModelLoader for retrieving texture for given model.
 
+
 	float orbitRadius = 0.0f;
 	
 	AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", shaderProgram);
 	
 	solarSystemElements.emplace_back(SolarSystemElement::ElementBody, 
 									 rootNode.attachChildren(
-										std::make_unique<SceneGraphNode>(std::make_unique<Model>(modelLoader.loadModel("earth.obj")))), 
-								     0.0f, 5.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+										NODE_FROM_MODEL(modelLoader.loadModel("sun.obj"))), 
+								     0.0f, 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
-	std::unique_ptr<SceneGraphNode> planet1OrbitNode = std::make_unique<SceneGraphNode>();
-	orbitRadius = 5.0f;
+	auto planet1OrbitNode = std::make_unique<SceneGraphNode>();
+	auto moon1OrbitNode = std::make_unique<SceneGraphNode>();
+	
+	orbitRadius = 20.0f;
 	solarSystemElements.emplace_back(SolarSystemElement::ElementBody,
 									 planet1OrbitNode->attachChildren(
-										std::make_unique<SceneGraphNode>(std::make_unique<Model>(modelLoader.loadModel("earth.obj")))), 
+										NODE_FROM_MODEL(modelLoader.loadModel("earth.obj"))), 
 								     orbitRadius, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+	solarSystemElements.emplace_back(SolarSystemElement::ElementBody,
+									 moon1OrbitNode->attachChildren(
+										std::make_unique<SceneGraphNode>(std::unique_ptr<Object3D>(ColCuboid::createCube(shaderProgram.getUniformLocation("model"), shaderProgram.getAttribPos(), shaderProgram.getAttribCol(), 1.0f)))), 
+								     orbitRadius/5, 0.5f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+	solarSystemElements.emplace_back(SolarSystemElement::ElementOrbit,
+									 planet1OrbitNode->attachChildren(std::move(moon1OrbitNode)),
+									 orbitRadius/5);
 	solarSystemElements.emplace_back(SolarSystemElement::ElementOrbit,
 									 rootNode.attachChildren(std::move(planet1OrbitNode)),
 									 orbitRadius);
@@ -57,32 +69,34 @@ SolarSystem::SolarSystem(const ShaderProgram& shaderProgram, TMat modelMat)
 
 void SolarSystem::animate()
 {
-
-	static float time = 0.0f;
 	for (auto&& element : solarSystemElements)
 	{
 		switch (element.type)
 		{
 			case SolarSystemElement::ElementOrbit:
 			{
-				glm::vec4 rotAxis = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f); // TODO: Why 'z' axis and not 'y'?
-				rotAxis = modelMat.getTMat() * rotAxis;
-				element.objectNode->localMat.setTMat(TMat());
-				element.objectNode->localMat.rotate(time, glm::vec3(rotAxis.x, rotAxis.y, rotAxis.z));
-				element.objectNode->localMat.translate(glm::vec3(element.orbitRadius, 0.0f, 0.0f));
+				element.objectNode->localMat.setTMat(
+					glm::rotate(glm::mat4(1.0f), 
+								orbitalSpeedFactor / element.orbitRadius, 
+								glm::vec3(0.0f, 0.0f, 1.0f)) 
+					* element.objectNode->localMat.getTMat());
 			}
 			break;
 			case SolarSystemElement::ElementBody:
 			{
-				element.objectNode->localMat.rotate(1.0f / 10, element.rotAxis);
+				element.objectNode->localMat.rotate(selfAxisRotationSpeedFactor / element.bodyScale, element.rotAxis);
 			}
 		}		
 	}
-
-	time += 0.01f;
 }
 
 void SolarSystem::draw()
 {
+	if (modelMat.dirtyFlag)
+	{
+		rootNode.localMat.setTMat(modelMat);
+		modelMat.dirtyFlag = false;
+	}
+	
 	rootNode.draw();
 }

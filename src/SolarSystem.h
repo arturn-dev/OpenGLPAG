@@ -40,6 +40,9 @@ class SolarSystem : public Object3D
 	std::vector<SolarSystemElement> solarSystemElements;
 	SceneGraphNode rootNode;
 
+	const float orbitalSpeedFactor = 0.2f;
+	const float selfAxisRotationSpeedFactor = 0.02f;
+	
 	void initElements();
 
 	// Temporary
