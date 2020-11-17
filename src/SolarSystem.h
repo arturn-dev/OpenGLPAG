@@ -8,6 +8,7 @@ struct SolarSystemElement
 {
 	enum ElementType
 	{
+		ElementOrbiting,
 		ElementOrbit,
 		ElementBody
 	};
@@ -16,21 +17,12 @@ struct SolarSystemElement
 	SceneGraphNode* objectNode;
 	float orbitRadius;
 	float bodyScale;
-	glm::vec3 rotAxis;
+	float tiltDeg;
+	bool needOrientationFix;
 
-	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode)
-		: SolarSystemElement(elementType, objectNode, 0.0f, 1.0f, glm::vec3())
-	{
-	}
-
-	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode, float orbitRadius)
-		: SolarSystemElement(elementType, objectNode, orbitRadius, 1.0f, glm::vec3())
-	{
-	}
-
-	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode, float orbitRadius, float bodyScale,
-	                   glm::vec3 rotAxis)
-		                   : type(elementType), objectNode(objectNode), orbitRadius(orbitRadius), bodyScale(bodyScale), rotAxis(rotAxis)
+	SolarSystemElement(ElementType elementType, SceneGraphNode* objectNode, float orbitRadius = 0.0f, float bodyScale = 1.0f,
+	                   float tiltDeg = 0, bool needOrientationFix = false)
+		                   : type(elementType), objectNode(objectNode), orbitRadius(orbitRadius), bodyScale(bodyScale), tiltDeg(tiltDeg), needOrientationFix(needOrientationFix)
 	{
 	}
 };

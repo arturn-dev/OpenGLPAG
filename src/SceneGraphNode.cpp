@@ -28,7 +28,7 @@ SceneGraphNode::SceneGraphNode()
 }
 
 SceneGraphNode::SceneGraphNode(std::unique_ptr<Object3D> object)
-	: object(std::move(object))
+	: object(std::move(object)), localMat(object->modelMat)
 {
 }
 

@@ -37,3 +37,8 @@ void Model::draw()
 		mesh.draw(modelMat.getTMat());
 	}
 }
+
+const MeshCollection& Model::getMeshes() const
+{
+	return meshes;
+}

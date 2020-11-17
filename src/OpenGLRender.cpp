@@ -117,6 +117,33 @@ void OpenGLRender::setVertexAttribPointers<ColVert>()
 	glBindVertexArray(0);
 }
 
+template<>
+void OpenGLRender::setVertexAttribPointers<TexVert>()
+{
+	glBindVertexArray(vao);
+
+	GLuint attribute = shaderProgram.getAttribPos();
+	if (attribute == -1U)
+	{
+		throw std::logic_error("Location of vertex's position attribute is unknown in the shader program.");
+	}
+	glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(TexVert), 
+						  reinterpret_cast<const void*>(offsetof(TexVert, pos)));
+	glEnableVertexAttribArray(attribute);
+
+	attribute = shaderProgram.getAttribTex();
+	if (attribute == -1U)
+	{
+		throw std::logic_error("Location of vertex's texture coordinate attribute is unknown in the shader program.");
+	}
+
+	glVertexAttribPointer(attribute, 2, GL_FLOAT, GL_FALSE, sizeof(TexVert),
+		                      reinterpret_cast<const void*>(offsetof(TexVert, tex)));
+	glEnableVertexAttribArray(attribute);
+
+	glBindVertexArray(0);
+}
+
 void OpenGLRender::setIndexBufferData(const std::vector<GLuint>& indices)
 {
 	glBindVertexArray(vao);
@@ -156,7 +183,7 @@ void OpenGLRender::setBufferData(const std::vector<T>& verts, const std::vector<
 	setVertexAttribPointers<T>();
 }
 
-void OpenGLRender::addTextureFromPath(Texture texture)
+void OpenGLRender::addTexture(Texture texture)
 {
 	if (textureInfos.size() == 16)
 	{
@@ -233,7 +260,20 @@ void OpenGLRender::deleteOpenGlRender()
 	freeResources();
 }
 
+std::vector<OpenGLRender::Texture> OpenGLRender::getTextures() const
+{
+	std::vector<Texture> textures;
+	for (auto&& textureInfo : textureInfos)
+	{
+		textures.push_back(textureInfo.texture);
+	}
+
+	return textures;
+}
+
 template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts);
 template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts, const std::vector<GLuint>& indices);
 template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts);
 template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts, const std::vector<GLuint>& indices);
+template void OpenGLRender::setBufferData<TexVert>(const std::vector<TexVert>& verts);
+template void OpenGLRender::setBufferData<TexVert>(const std::vector<TexVert>& verts, const std::vector<GLuint>& indices);

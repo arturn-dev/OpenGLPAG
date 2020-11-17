@@ -18,7 +18,7 @@ Mesh::Mesh(VertexCollection vertices,
 	
 	for (auto&& tex: textures)
 	{
-		openGLRender.addTextureFromPath(tex);
+		openGLRender.addTexture(tex);
 	}
 }
 
@@ -46,4 +46,9 @@ void Mesh::draw(const glm::mat4 modelMat)
 void Mesh::deleteMesh()
 {
 	openGLRender.deleteOpenGlRender();
+}
+
+const OpenGLRender& Mesh::getOpenGLRender() const
+{
+	return openGLRender;
 }

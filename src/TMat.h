@@ -11,7 +11,15 @@ public:
 	bool dirtyFlag = false;
 
 	TMat() : tMat(1.0f) {}
+	TMat(const TMat& other) : tMat(other.tMat) {}
+	TMat(TMat&& other) noexcept : tMat(other.tMat) {}
 	TMat(const glm::mat4 mat) : tMat(mat) {}
+
+	TMat& operator=(const TMat& other)
+	{
+		tMat = other.tMat;
+		return *this;
+	}
 	
 	void translate(glm::vec3 vec)
 	{

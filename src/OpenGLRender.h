@@ -60,9 +60,11 @@ public:
 	template <typename T>
 	void setBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices);
 	
-	void addTextureFromPath(Texture texture);
+	void addTexture(Texture texture);
 	void draw(const glm::mat4 modelMat);
 
 	void deleteOpenGlRender();
+
+	std::vector<Texture> getTextures() const;
 };
 

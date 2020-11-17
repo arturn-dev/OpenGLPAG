@@ -118,6 +118,6 @@ Model AssimpModelLoader::loadModel(const std::string& modelFilename)
 	{
 		throw std::logic_error("[Assimp] " + std::string(importer.GetErrorString()));
 	}
-
+	
 	return Model(processNode(scene->mRootNode, scene));
 }

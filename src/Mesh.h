@@ -16,8 +16,6 @@ class Mesh
 	VertexCollection vertices;
 	IndexCollection indices;
 
-	//void initOpenGLRender();
-
 public:
 	Mesh(VertexCollection vertices, 
 		 IndexCollection indices, 
@@ -29,4 +27,6 @@ public:
 
 	void draw(const glm::mat4);
 	void deleteMesh();
+
+	const OpenGLRender& getOpenGLRender() const;
 };

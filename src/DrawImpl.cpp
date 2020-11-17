@@ -29,3 +29,13 @@ void ArraysMultiDraw::draw()
 {
 	glMultiDrawArrays(GL_TRIANGLE_STRIP, firstVerticesInMeshes.data(), verticesCountsInMeshes.data(), verticesCountsInMeshes.size());
 }
+
+ArraysDraw::ArraysDraw(GLenum mode, GLsizei count): mode(mode),
+                                                    count(count)
+{
+}
+
+void ArraysDraw::draw()
+{
+	glDrawArrays(mode, 0, count);
+}
