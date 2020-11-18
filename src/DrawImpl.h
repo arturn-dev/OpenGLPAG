@@ -21,11 +21,11 @@ public:
 
 class ArraysMultiDraw : public DrawImpl
 {
-public:
-	ArraysMultiDraw(const std::vector<GLint>& firstVerticesInMeshes, const std::vector<GLsizei>& verticesCountsInMeshes);
-	// TODO: move class's attribs to private
 	std::vector<GLint> firstVerticesInMeshes;
 	std::vector<GLsizei> verticesCountsInMeshes;
+	
+public:
+	ArraysMultiDraw(const std::vector<GLint>& firstVerticesInMeshes, const std::vector<GLsizei>& verticesCountsInMeshes);
 	
 	void draw() override;
 };

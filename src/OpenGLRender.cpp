@@ -1,12 +1,11 @@
 #include "OpenGLRender.h"
 
-#include <stb_image.h>
 #include <stdexcept>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "AssimpModelLoader.h"
 #include "Vertex.h"
-
+#include "TextureLoader.h"
 
 void OpenGLRender::freeResources()
 {
@@ -191,12 +190,9 @@ void OpenGLRender::addTexture(Texture texture)
 	}
 
 	int width, height, channelsCount;
-	stbi_set_flip_vertically_on_load(true);
-	stbi_uc* textureData = stbi_load(texture.path.c_str(), &width, &height, &channelsCount, 0);
-	if (textureData == nullptr)
-	{
-		throw std::logic_error("Error loading texture from: " + texture.path);
-	}
+
+	TextureLoader texLoader;
+	unsigned char* textureData = texLoader.loadTextureFromPath(texture.path, width, height, channelsCount);
 	
 	textureInfos.emplace_back();
 	auto lastTexInfoIt = (textureInfos.end() - 1);
@@ -207,11 +203,9 @@ void OpenGLRender::addTexture(Texture texture)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(textureData));
 	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(textureData);
 }
 
 void OpenGLRender::draw(const glm::mat4 modelMat)

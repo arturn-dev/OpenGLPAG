@@ -16,6 +16,11 @@ Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderPro
 	openGlRender.drawImpl = std::unique_ptr<ArraysMultiDraw>(
 		new ArraysMultiDraw({0, meshVertsCount, meshVertsCount * 2}, {meshVertsCount, meshVertsCount, meshVertsCount}));
 
+	float r = color.r;
+	float g = color.g;
+	float b = color.b;
+	float a = color.a;
+	
 	// Create sides
 	for (unsigned int i = 0; i <= sectionsCount; i++)
 	{
@@ -24,12 +29,12 @@ Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderPro
 		vertices.emplace_back(radius * static_cast<float>(cos(angle)), 
 							  radius * static_cast<float>(sin(angle)),
 							  height / 2,
-							  color.r, color.g, color.b, color.a);
+							  r, g, b, a);
 
 		vertices.emplace_back(radius * static_cast<float>(cos(angle)), 
 							  radius * static_cast<float>(sin(angle)),
 							  -height / 2,
-							  color.r, color.g, color.b, color.a);
+							  r, g, b, a);
 	}
 
 	// Create bases
@@ -37,15 +42,15 @@ Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderPro
 	{
 		float angle = i * angleIncrease;
 		
-		vertices.emplace_back(0, 
-							  0,
+		vertices.emplace_back(0.0f, 
+							  0.0f,
 							  height / 2,
-							  color.r, color.g, color.b, color.a);
+							  r, g, b, a);
 
 		vertices.emplace_back(radius * static_cast<float>(cos(angle)), 
 							  radius * static_cast<float>(sin(angle)),
 							  height / 2,
-							  color.r, color.g, color.b, color.a);
+							  r, g, b, a);
 	}
 	for (unsigned int i = 0; i <= sectionsCount; i++)
 	{
@@ -54,12 +59,12 @@ Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderPro
 		vertices.emplace_back(radius * static_cast<float>(cos(angle)), 
 							  radius * static_cast<float>(sin(angle)),
 							  -height / 2,
-							  color.r, color.g, color.b, color.a);
+							  r, g, b, a);
 
-		vertices.emplace_back(0, 
-							  0,
+		vertices.emplace_back(0.0f, 
+							  0.0f,
 							  -height / 2,
-							  color.r, color.g, color.b, color.a);
+							  r, g, b, a);
 
 		
 	}

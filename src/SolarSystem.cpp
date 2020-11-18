@@ -137,7 +137,7 @@ SolarSystem::SolarSystem(const ShaderProgram& shaderProgram, unsigned int cylMin
 
 
 	float planetOrbitsRs[] = {15.0f, 25.0f, 50.0f, 80.0f, 130.0f, 160.0f, 200.0f, 230.0f, 260.0f};
-	float moonOrbitsRs[] = {5.0f, 5.0f, 8.0f, 7.0f, 11.0f};
+	float moonOrbitsRs[] = {5.0f, 5.0f, 8.0f, 10.0f, 7.0f, 11.0f, 13.0f, 18.0f};
 	
 	AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", shaderProgram);
 
@@ -164,15 +164,21 @@ SolarSystem::SolarSystem(const ShaderProgram& shaderProgram, unsigned int cylMin
 	prepareCylinders(shaderProgram, planetOrbitsRs[8]);
 
 	addTexModelToParent(earthAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
-						moonOrbitsRs[0], 1.0f, 0.5f, 3.0f, true);
+						moonOrbitsRs[0], 1.0f, 0.5f, 3.5f, true);
 	addTexModelToParent(jupiterAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
-						moonOrbitsRs[1], 1.0f, 0.5f, 3.0f, true);
+						moonOrbitsRs[1], 1.0f, 0.5f, 5.0f, true);
 	addTexModelToParent(jupiterAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
-						moonOrbitsRs[2], 1.0f, 0.7f, 3.0f, true);
+						moonOrbitsRs[2], 1.0f, 0.7f, 6.0f, true);
+	addTexModelToParent(jupiterAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
+						moonOrbitsRs[3], 1.0f, 0.7f, 1.1f, true);
 	addTexModelToParent(saturnAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
-						moonOrbitsRs[3], 1.0f, 0.3f, 3.0f, true);
+						moonOrbitsRs[4], 1.0f, 0.3f, 1.3f, true);
 	addTexModelToParent(saturnAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
-						moonOrbitsRs[4], 1.0f, 0.9f, 3.0f, true);
+						moonOrbitsRs[5], 1.0f, 0.9f, 7.5f, true);
+	addTexModelToParent(saturnAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
+						moonOrbitsRs[6], 1.0f, 0.3f, 43.0f, true);
+	addTexModelToParent(saturnAttachNodeIdx, modelLoader.loadModel("moon.obj"), shaderProgram,
+						moonOrbitsRs[7], 1.0f, 0.5f, 10.0f, true);
 	
 	initElements();
 }
