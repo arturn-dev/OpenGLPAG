@@ -1,10 +1,5 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include <glad/glad.h>
-
 #include "TMat.h"
 
 struct ColVert
@@ -41,63 +36,14 @@ struct TexVert
 	{}
 };
 
-class Object3D // TODO: Remove all OpenGL related functions and variables. Use the OpenGLRender class instead.
+class Object3D
 {
 public:
 	TMat modelMat;
 
-protected:
-	GLuint vao, vbo;
-	GLint modelMatLocation;
-	
-	virtual void initBuffers() = 0;
-	virtual void deleteBuffers() = 0;
-
-public:
 	Object3D() {}
-	Object3D(GLint modelMatLocation);
-	Object3D(const TMat& modelMat) : modelMat(modelMat) {}
-	virtual ~Object3D();
+	explicit Object3D(const TMat& modelMat) : modelMat(modelMat) {}
+	virtual ~Object3D() {}
 	
 	virtual void draw() = 0;
-
-	GLuint getVao() const;
-	GLint getModelMatLocation() const;
-};
-
-class ColObject3D : public Object3D
-{
-protected:
-	void init(GLuint aPos, GLuint aCol);
-	void initBuffers() override;
-	void deleteBuffers() override;
-	virtual void createVertexArray(std::vector<ColVert>& verts) = 0;
-	
-public:
-	ColObject3D() : Object3D() {}
-	ColObject3D(GLint modelMatLocation);
-	virtual ~ColObject3D();
-	
-	void draw() = 0;	
-};
-
-class TexObject3D : public Object3D
-{
-	std::string texturePath;
-
-	void initTexture();
-	
-protected:
-	unsigned int texture;
-	
-	void init(GLuint aPos, GLuint aTex);
-	void initBuffers() override;
-	void deleteBuffers() override;
-	virtual void createVertexArray(std::vector<TexVert>& verts) = 0;
-	
-public:
-	TexObject3D(GLint modelMatLocation, const std::string& texturePath);
-	virtual ~TexObject3D();
-	
-	void draw() = 0;	
 };

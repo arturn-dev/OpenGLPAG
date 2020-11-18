@@ -6,7 +6,6 @@ class ShaderProgram
 {
 	GLuint programID;
 	GLuint attribPos, attribCol, attribTex, attribNorm;
-	// TODO: Add shader's locations of matrices
 
 	std::string getInfoLog();
 	

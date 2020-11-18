@@ -22,17 +22,4 @@ public:
 	void draw() override;
 
 	const MeshCollection& getMeshes() const;
-
-	// Temporary methods for compilation correctness
-
-protected:
-	void initBuffers() override
-	{
-		
-	}
-	
-	void deleteBuffers() override
-	{
-		
-	}
 };

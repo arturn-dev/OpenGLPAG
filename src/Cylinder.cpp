@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderProgram shaderProgram, glm::vec4 color)
-	: ColObject3D(), sectionsCount(sectionsCount), height(height), radius(radius), openGlRender(shaderProgram)
+	: Object3D(), sectionsCount(sectionsCount), height(height), radius(radius), openGlRender(shaderProgram)
 													
 {
 	const float angleIncrease = 2 * M_PI / sectionsCount;

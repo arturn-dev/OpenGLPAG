@@ -49,11 +49,6 @@ class SolarSystem : public Object3D
 	                                        float orbitRadius, float rotationSpeed, float bodyScale, float tiltDeg, bool needOrientationFix);
 	void prepareCylinders(ShaderProgram shaderProgram, float orbitRadius);
 
-	// Temporary
-protected:
-	void initBuffers() override {}
-	void deleteBuffers() override {}
-	//
 public:
 	SolarSystem(const ShaderProgram& shaderProgram, unsigned int cylMinRes, unsigned int cylMaxRes, TMat modelMat = glm::mat4(1.0f));
 

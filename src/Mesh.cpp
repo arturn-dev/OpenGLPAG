@@ -1,10 +1,5 @@
 #include "Mesh.h"
 
-//void Mesh::initOpenGLRender()
-//{
-//	openGLRender.setVertexBufferData<Vertex>(vertices, indices);
-//}
-
 Mesh::Mesh(VertexCollection vertices, 
 		   IndexCollection indices, 
 		   const TextureCollection& textures, 

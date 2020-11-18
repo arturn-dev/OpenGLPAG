@@ -1,13 +1,9 @@
 #include "SolarSystem.h"
-
-
 #include "Cylinder.h"
 #include "Orbit.h"
 
 void SolarSystem::initElements()
 {
-	// TODO: vector of Celestial Bodies processing (setting objects' matrices from info in the structure)
-
 	rootNode.localMat.setTMat(modelMat);
 	
 	int i = 0;
@@ -133,9 +129,6 @@ void SolarSystem::prepareCylinders(ShaderProgram shaderProgram, float orbitRadiu
 SolarSystem::SolarSystem(const ShaderProgram& shaderProgram, unsigned int cylMinRes, unsigned int cylMaxRes, TMat modelMat)
 	: Object3D(modelMat), cylMinRes(cylMinRes), cylMaxRes(cylMaxRes)
 {
-	// TODO: Get textures for orbits i.e. new method in AssimpModelLoader for retrieving texture for given model.
-
-
 	float planetOrbitsRs[] = {15.0f, 25.0f, 50.0f, 80.0f, 130.0f, 160.0f, 200.0f, 230.0f, 260.0f};
 	float moonOrbitsRs[] = {5.0f, 5.0f, 8.0f, 10.0f, 7.0f, 11.0f, 13.0f, 18.0f};
 	

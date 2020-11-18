@@ -8,9 +8,6 @@
 
 class NullObject : public Object3D
 {
-protected:
-	void initBuffers() override {}
-	void deleteBuffers() override {}
 public:
 	void draw() override {}
 };

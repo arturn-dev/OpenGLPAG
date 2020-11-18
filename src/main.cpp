@@ -167,15 +167,9 @@ int main(int, char**)
 	
     OpenGLCtx openGlCtx;
 	
-	//std::unique_ptr<Object3D> model;
-	
-	//std::unique_ptr<AssimpModelLoader> modelLoader;
-	
 	try
 	{		
 		openGlCtx.init();
-		//modelLoader = std::make_unique<AssimpModelLoader>(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
-		//model = std::make_unique<Model>(modelLoader->loadModel("earth.obj"));
 	}
 	catch (std::exception& e)
 	{
@@ -184,20 +178,6 @@ int main(int, char**)
 	}
 
 	SolarSystem solarSystem(openGlCtx.getShaderProgram(), minCylinderRes, maxCylinderRes);
-    /*SceneGraphNode solarSystemNode = SceneGraphNode();
-	solarSystemNode.attachChildren(SceneGraphNode(std::move(model)));
-	SceneGraphNode earthOrbitNode = SceneGraphNode();
-	SceneGraphNode childNode(std::make_unique<Model>(modelLoader->loadModel("earth.obj")));
-	childNode.localMat.translate(glm::vec3(0.5f, 0.0f, 0.0f));
-	earthOrbitNode.attachChildren(std::move(childNode));
-	solarSystemNode.attachChildren(std::move(earthOrbitNode));*/
-	
-    
-	/*model->modelMat.rotate(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	model->modelMat.translate(glm::vec3(0.3f, 0.0f, 0.0f));
-	
-    std::vector<std::unique_ptr<Model>> objects;
-	objects.push_back(std::move(model));*/
 
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
@@ -241,14 +221,6 @@ int main(int, char**)
         int display_w, display_h;
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
-    	
-        /*for (auto&& object : objects)
-        {
-        	object->modelMat.rotate(glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec);
-        	object->modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
-        }
-        
-    	glm::mat4 rotationMat = glm::inverse(objects[0]->modelMat.getTMat()) * glm::inverse(openGlCtx.getViewMat());*/
 
     	solarSystem.modelMat.rotate(glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec);
     	solarSystem.modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
@@ -262,14 +234,9 @@ int main(int, char**)
 
     	openGlCtx.setViewMat(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, scrollDelta * scrollSensitivity)) * openGlCtx.getViewMat());
 
-        //openGlCtx.render(display_w, display_h, objects[0].get());
-
-        //solarSystemNode.localMat.rotate(0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
-    	//sceneGraphRoot.localMat.translate(glm::vec3(0.005f, 0.0f, 0.0f));
-    	
-    	//openGlCtx.render(display_w, display_h, &solarSystemNode);
     	solarSystem.setCylinderRes(cylinderRes);
     	solarSystem.animate();
+    	
     	openGlCtx.setWireframeMode(isWireframeMode);
     	openGlCtx.render(display_w, display_h, &solarSystem);
     	    	
