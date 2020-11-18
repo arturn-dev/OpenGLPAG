@@ -14,6 +14,7 @@ class OpenGLCtx
 	ShaderProgram shaderProgram;	
 	glm::mat4 viewMat, projMat;
 	GLuint aPos, aCol, aTex;
+	bool wireframeMode = false;
 	
 	void prepareShaders();
 	void renderInit(int windowW, int windowH);
@@ -35,6 +36,7 @@ public:
 	glm::mat4 getViewMat() const;
 
 	void setViewMat(const glm::mat4& viewMat);
+	void setWireframeMode(bool wireframeMode);
 	const ShaderProgram& getShaderProgram() const;
 
 	void deleteCtx();

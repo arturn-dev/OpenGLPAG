@@ -36,7 +36,7 @@ static void glfw_error_callback(int error, const char* description)
 bool init = true;
 
 const float mouseSensitivity = 0.1f;
-const float scrollSensitivity = 2.0f;
+const float scrollSensitivity = 6.0f;
 float cursorLastX = 0;
 float cursorLastY = 0;
 float cursorDeltaX = 0;
@@ -156,9 +156,14 @@ int main(int, char**)
 
     bool show_demo_window = false;
 
-    int recursionLvl = 1;
-	const int minRecursionLvl = 0;
-	const int maxRecursionLvl = 4;
+	// GUI controls settings //
+
+	int cylinderRes = 3;
+	const int minCylinderRes = 3;
+	const int maxCylinderRes = 30;
+	bool isWireframeMode = false;
+
+	// End of GUI controls settings //
 	
     OpenGLCtx openGlCtx;
 	
@@ -178,7 +183,7 @@ int main(int, char**)
 		return 1;
 	}
 
-	SolarSystem solarSystem(openGlCtx.getShaderProgram(), 3, 30);
+	SolarSystem solarSystem(openGlCtx.getShaderProgram(), minCylinderRes, maxCylinderRes);
     /*SceneGraphNode solarSystemNode = SceneGraphNode();
 	solarSystemNode.attachChildren(SceneGraphNode(std::move(model)));
 	SceneGraphNode earthOrbitNode = SceneGraphNode();
@@ -222,9 +227,10 @@ int main(int, char**)
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            ImGui::Begin("Menger cube");
+            ImGui::Begin("Solar System");
+        	ImGui::Checkbox("Wireframe mode", &isWireframeMode);
 
-        	ImGui::SliderInt("Recursion level", &recursionLvl, minRecursionLvl, maxRecursionLvl);
+        	ImGui::SliderInt("Cylinder resolution", &cylinderRes, minCylinderRes, maxCylinderRes);
         	ImGui::ColorEdit4("Color", glm::value_ptr(userColor));
         	
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -262,7 +268,9 @@ int main(int, char**)
     	//sceneGraphRoot.localMat.translate(glm::vec3(0.005f, 0.0f, 0.0f));
     	
     	//openGlCtx.render(display_w, display_h, &solarSystemNode);
+    	solarSystem.setCylinderRes(cylinderRes);
     	solarSystem.animate();
+    	openGlCtx.setWireframeMode(isWireframeMode);
     	openGlCtx.render(display_w, display_h, &solarSystem);
     	    	
         cursorDeltaX = 0;

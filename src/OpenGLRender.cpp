@@ -204,6 +204,10 @@ void OpenGLRender::addTexture(Texture texture)
 
 	glGenTextures(1, &lastTexInfoIt->id);
 	glBindTexture(GL_TEXTURE_2D, lastTexInfoIt->id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(textureData));
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -242,7 +246,7 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 			break;
 		}
 
-		glUniform1i(shaderProgram.getUniformLocation(uniformName), i);		
+		glUniform1i(shaderProgram.getUniformLocation(uniformName), i);
 
 		i++;
 	}

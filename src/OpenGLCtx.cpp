@@ -24,7 +24,7 @@ OpenGLCtx::OpenGLCtx()
 void OpenGLCtx::init()
 {
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	prepareShaders();
 	shaderProgram.use();
@@ -32,21 +32,19 @@ void OpenGLCtx::init()
 	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -30.0f));
 	viewMat = glm::rotate(viewMat, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));	
 	
-	/*aPos = glGetAttribLocation(shaderProgram.getProgramId(), "pos_in");
-    aCol = glGetAttribLocation(shaderProgram.getProgramId(), "col_in");
-    aTex = glGetAttribLocation(shaderProgram.getProgramId(), "tex_in");*/
 	shaderProgram.setAttribPosByName("pos_in");
 	shaderProgram.setAttribColByName("col_in");
 	shaderProgram.setAttribTexByName("tex_in");
 	shaderProgram.setAttribNormByName("norm_in");
-
-	//glUniform1i(shaderProgram.getUniformLocation("tex_sampler"), 0);
 }
 
 void OpenGLCtx::renderInit(int windowW, int windowH)
 {
 	glViewport(0, 0, windowW, windowH);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (wireframeMode)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -116,6 +114,11 @@ glm::mat4 OpenGLCtx::getViewMat() const
 void OpenGLCtx::setViewMat(const glm::mat4& viewMat)
 {
 	this->viewMat = viewMat;
+}
+
+void OpenGLCtx::setWireframeMode(bool wireframeMode)
+{
+	this->wireframeMode = wireframeMode;
 }
 
 const ShaderProgram& OpenGLCtx::getShaderProgram() const
