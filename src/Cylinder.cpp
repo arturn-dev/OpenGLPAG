@@ -3,12 +3,11 @@
 #include <corecrt_math_defines.h>
 #include <glm/glm.hpp>
 
-Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderProgram shaderProgram)
+Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderProgram shaderProgram, glm::vec4 color)
 	: ColObject3D(), sectionsCount(sectionsCount), height(height), radius(radius), openGlRender(shaderProgram)
 													
 {
 	const float angleIncrease = 2 * M_PI / sectionsCount;
-	glm::vec4 color(1.0f, 0.0f, 0.0f, 1.0f);
 
 	std::vector<ColVert> vertices;
 
@@ -66,6 +65,23 @@ Cylinder::Cylinder(unsigned sectionsCount, float height, float radius, ShaderPro
 	}
 
 	openGlRender.setBufferData(vertices);
+}
+
+Cylinder::Cylinder(Cylinder&& other) noexcept
+	: openGlRender(std::move(other.openGlRender)),
+	  sectionsCount(other.sectionsCount), height(other.radius), radius(other.radius)
+{
+	
+}
+
+Cylinder& Cylinder::operator=(Cylinder&& other) noexcept
+{
+	openGlRender = std::move(other.openGlRender);
+	sectionsCount = other.sectionsCount;
+	height = other.height;
+	radius = other.radius;
+
+	return *this;
 }
 
 void Cylinder::draw()

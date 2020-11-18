@@ -53,8 +53,8 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	shaderProgram.use();
 
 	float ar = static_cast<float>(windowW) / static_cast<float>(windowH);
-	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 100.0f);
-	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 100.0f);
+	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 10000.0f);
+	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 10000.0f);
 	
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));

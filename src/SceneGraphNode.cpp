@@ -14,7 +14,8 @@ void SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
 		localMat.dirtyFlag = false;
 	}
 
-	object->draw();
+	if (isVisible)
+		object->draw();
 
 	for (auto&& children : childrens)
 	{

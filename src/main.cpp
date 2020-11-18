@@ -178,7 +178,7 @@ int main(int, char**)
 		return 1;
 	}
 
-	SolarSystem solarSystem(openGlCtx.getShaderProgram());
+	SolarSystem solarSystem(openGlCtx.getShaderProgram(), 3, 30);
     /*SceneGraphNode solarSystemNode = SceneGraphNode();
 	solarSystemNode.attachChildren(SceneGraphNode(std::move(model)));
 	SceneGraphNode earthOrbitNode = SceneGraphNode();

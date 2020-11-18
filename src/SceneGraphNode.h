@@ -19,6 +19,7 @@ class SceneGraphNode
 {
 public:
 	TMat localMat; // Transformation matrix of the object related to the parent node's object.
+	bool isVisible = true;
 
 private:	
 	std::unique_ptr<Object3D> object;

@@ -15,7 +15,10 @@ protected:
 	void createVertexArray(std::vector<ColVert>& verts) override {}
 	//
 public:
-	Cylinder(unsigned sectionsCount, float height, float radius, ShaderProgram shaderProgram);
+	Cylinder(unsigned sectionsCount, float height, float radius, ShaderProgram shaderProgram, glm::vec4 color);
+	Cylinder(const Cylinder&) = delete;
+	Cylinder(Cylinder&& other) noexcept;
+	Cylinder& operator=(Cylinder&& other) noexcept;
 
 	void draw() override;
 };
