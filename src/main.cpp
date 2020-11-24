@@ -179,11 +179,14 @@ int main(int, char**)
 		printf(e.what());
 		return 1;
 	}
-
+    std::vector<std::unique_ptr<Object3D>> objects;
     AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
 	Model cubeObj = modelLoader.loadModel("cube.obj");
 	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
-    std::unique_ptr<Object3D> cube = std::make_unique<Model>(std::move(cubeObj));
+	Model lightCube = modelLoader.loadModel("cube.obj", aiColor4D{1.0f, 1.0f, 1.0f, 1.0f});
+	lightCube.modelMat.translate(glm::vec3(1.0f, 1.0f, 1.0f));
+	objects.emplace_back(std::make_unique<Model>(std::move(cubeObj)));	
+	objects.emplace_back(std::make_unique<Model>(std::move(lightCube)));
 		
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
@@ -225,7 +228,7 @@ int main(int, char**)
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
-    	openGlCtx.render(display_w, display_h, cube.get());
+    	openGlCtx.render(display_w, display_h, objects.begin(), objects.end());
     	    	
         cursorDeltaX = 0;
         cursorDeltaY = 0;

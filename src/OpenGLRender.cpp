@@ -78,13 +78,23 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 						  reinterpret_cast<const void*>(offsetof(Vertex, tex)));
 	glEnableVertexAttribArray(attribute);
 
+	attribute = shaderProgram.getAttribCol();
+	if (attribute == -1U)
+	{
+		throw std::logic_error("Location of vertex's color attribute is unknown in the shader program.");
+	}
+
+	glVertexAttribPointer(attribute, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+						  reinterpret_cast<const void*>(offsetof(Vertex, col)));
+	glEnableVertexAttribArray(attribute);
+
 	attribute = shaderProgram.getAttribNorm();
 	if (attribute != -1U)
 	{
 		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, normal)));
 		glEnableVertexAttribArray(attribute);
-	}	
+	}
 	
 	glBindVertexArray(0);
 }
@@ -250,6 +260,15 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 	glBindVertexArray(vao);
 	drawImpl->draw();
 
+	i = 0;
+	for (auto&& textureInfo : textureInfos)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		i++;
+	}
+	
 	glBindVertexArray(0);
 }
 

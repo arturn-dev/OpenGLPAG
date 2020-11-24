@@ -63,7 +63,7 @@ Mesh AssimpModelLoader::createMesh(aiMesh* mesh, const aiScene* scene)
 			texCoords = aiVector2D(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
 		}
 
-		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i], texCoords);
+		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i], texCoords, vertexColor);
 	}
 	
 	// Populate index collection.
@@ -109,8 +109,10 @@ AssimpModelLoader::AssimpModelLoader(const std::string& modelDirPath, const std:
 {
 }
 
-Model AssimpModelLoader::loadModel(const std::string& modelFilename)
+Model AssimpModelLoader::loadModel(const std::string& modelFilename, aiColor4D col)
 {
+	vertexColor = col;
+	
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(getModelPath(modelFilename), aiProcess_Triangulate);
 

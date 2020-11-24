@@ -29,7 +29,7 @@ void OpenGLCtx::init()
 	prepareShaders();
 	shaderProgram.use();
 
-	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -6.0f));
+	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -10.0f));
 	viewMat = glm::rotate(viewMat, glm::radians(60.0f), glm::vec3(1.0f, 1.0f, 0.0f));	
 	
 	shaderProgram.setAttribPosByName("pos_in");

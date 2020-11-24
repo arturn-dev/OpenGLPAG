@@ -12,6 +12,7 @@ class AssimpModelLoader
 	std::string modelDirPath;
 	std::string textureDirPath;
 	ShaderProgram shaderProgram;
+	aiColor4D vertexColor;
 
 	MeshCollection processNode(aiNode* node, const aiScene* scene);
 	Mesh createMesh(aiMesh* mesh, const aiScene* scene);
@@ -25,7 +26,7 @@ public:
 	void setTextureDirPath(const std::string& textureDirPath);
 	void setShaderProgram(ShaderProgram shaderProgram);
 	
-	Model loadModel(const std::string& modelFilename);
+	Model loadModel(const std::string& modelFilename, aiColor4D col = aiColor4D{0.0f});
 
 	std::string getModelPath(const std::string& filename);
 	std::string getTexturePath(const std::string& filename);
