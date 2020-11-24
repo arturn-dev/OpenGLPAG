@@ -33,6 +33,11 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept
 	return *this;
 }
 
+void Mesh::addTexture(OpenGLRender::Texture texture)
+{
+	openGLRender.addTexture(texture);
+}
+
 void Mesh::draw(const glm::mat4 modelMat)
 {
 	openGLRender.draw(modelMat);

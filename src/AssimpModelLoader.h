@@ -13,9 +13,6 @@ class AssimpModelLoader
 	std::string textureDirPath;
 	ShaderProgram shaderProgram;
 
-	std::string getModelPath(const std::string& filename);
-	std::string getTexturePath(const std::string& filename);
-
 	MeshCollection processNode(aiNode* node, const aiScene* scene);
 	Mesh createMesh(aiMesh* mesh, const aiScene* scene);
 	TextureCollection getTexturesOfType(aiMaterial* material, aiTextureType textureType, OpenGLRender::Texture::Type targetTextureType);
@@ -27,5 +24,9 @@ public:
 	void setModelDirPath(const std::string& modelDirPath);
 	void setTextureDirPath(const std::string& textureDirPath);
 	void setShaderProgram(ShaderProgram shaderProgram);
+	
 	Model loadModel(const std::string& modelFilename);
+
+	std::string getModelPath(const std::string& filename);
+	std::string getTexturePath(const std::string& filename);
 };

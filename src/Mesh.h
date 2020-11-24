@@ -25,6 +25,8 @@ public:
 	Mesh(Mesh&& other) noexcept;
 	Mesh& operator=(Mesh&& other) noexcept;
 
+	void addTexture(OpenGLRender::Texture texture);
+
 	void draw(const glm::mat4);
 	void deleteMesh();
 

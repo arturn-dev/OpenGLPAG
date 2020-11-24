@@ -38,7 +38,7 @@ void Model::draw()
 	}
 }
 
-const MeshCollection& Model::getMeshes() const
+MeshCollection& Model::getMeshes()
 {
 	return meshes;
 }

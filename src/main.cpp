@@ -6,7 +6,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "OpenGLCtx.h"
-#include "SolarSystem.h"
 #include <stdio.h>
 #include <fstream>
 
@@ -26,6 +25,10 @@
 #include <GLFW/glfw3.h> // Include glfw3.h after our OpenGL definitions
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+
+#include "AssimpModelLoader.h"
+#include "Model.h"
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -177,8 +180,11 @@ int main(int, char**)
 		return 1;
 	}
 
-	SolarSystem solarSystem(openGlCtx.getShaderProgram(), minCylinderRes, maxCylinderRes);
-
+    AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
+	Model cubeObj = modelLoader.loadModel("cube.obj");
+	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+    std::unique_ptr<Object3D> cube = std::make_unique<Model>(std::move(cubeObj));
+		
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
 	
@@ -219,23 +225,7 @@ int main(int, char**)
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
-    	solarSystem.modelMat.rotate(glm::radians(cursorDeltaX * mouseSensitivity), yRotationVec);
-    	solarSystem.modelMat.rotate(glm::radians(cursorDeltaY * mouseSensitivity), xRotationVec);
-    	glm::mat4 rotationMat = glm::inverse(solarSystem.modelMat.getTMat()) * glm::inverse(openGlCtx.getViewMat());
-
-    	glm::vec4 xRotationVec4 = rotationMat * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-        glm::vec4 yRotationVec4 = rotationMat * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    	
-        xRotationVec = glm::normalize(glm::vec3(xRotationVec4.x, xRotationVec4.y, xRotationVec4.z));
-        yRotationVec = glm::normalize(glm::vec3(yRotationVec4.x, yRotationVec4.y, yRotationVec4.z));
-
-    	openGlCtx.setViewMat(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, scrollDelta * scrollSensitivity)) * openGlCtx.getViewMat());
-
-    	solarSystem.setCylinderRes(cylinderRes);
-    	solarSystem.animate();
-    	
-    	openGlCtx.setWireframeMode(isWireframeMode);
-    	openGlCtx.render(display_w, display_h, &solarSystem);
+    	openGlCtx.render(display_w, display_h, cube.get());
     	    	
         cursorDeltaX = 0;
         cursorDeltaY = 0;

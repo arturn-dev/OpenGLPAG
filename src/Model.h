@@ -21,5 +21,5 @@ public:
 
 	void draw() override;
 
-	const MeshCollection& getMeshes() const;
+	MeshCollection& getMeshes();
 };
