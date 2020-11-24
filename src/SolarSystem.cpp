@@ -4,6 +4,7 @@
 
 void SolarSystem::initElements()
 {
+	
 	rootNode.localMat.setTMat(modelMat);
 	
 	int i = 0;

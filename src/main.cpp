@@ -181,8 +181,6 @@ int main(int, char**)
 
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
-	glm::vec4 userColor(0.0f, 0.0f, 0.0f, 0.0f);
-
 	
 	glfwSetScrollCallback(window, mouseScrollCallback);
 	
@@ -211,7 +209,6 @@ int main(int, char**)
         	ImGui::Checkbox("Wireframe mode", &isWireframeMode);
 
         	ImGui::SliderInt("Cylinder resolution", &cylinderRes, minCylinderRes, maxCylinderRes);
-        	ImGui::ColorEdit4("Color", glm::value_ptr(userColor));
         	
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
