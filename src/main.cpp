@@ -78,6 +78,51 @@ void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	scrollDelta = static_cast<float>(yoffset);
 }
 
+std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
+{
+	std::vector<std::unique_ptr<Object3D>> objects;
+    glm::vec3 lightColor{1.0f, 0.5f, 0.5f};
+	
+	// Prepare shaders
+	
+	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
+	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
+	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
+	
+	basicVert.compileShader();
+	basicFrag.compileShader();
+	lightFrag.compileShader();
+
+	ShaderProgram basicShader;
+	basicShader.attachShader(basicVert);
+	basicShader.attachShader(basicFrag);
+	basicShader.makeProgram();
+	basicShader.setUniformVec3("lightColor", lightColor);
+
+    ShaderProgram lightShader;
+	lightShader.attachShader(basicVert);
+	lightShader.attachShader(lightFrag);
+	lightShader.makeProgram();
+
+    auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
+	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
+	
+	// Load and setup models
+	
+	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
+	AssimpModelLoader<Mesh<ColVert>> modelLoader2(".\\res\\models", ".\\res\\textures");
+	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr);
+	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+	Model<Mesh<ColVert>> lightCube = modelLoader2.loadModel("cube.obj", *sp2Ptr, aiColor4D{lightColor.r, lightColor.g, lightColor.b, 1.0f});
+	lightCube.modelMat.translate(glm::vec3(1.0f, 0.0f, -5.0f));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));	
+	objects.emplace_back(std::make_unique<Model<Mesh<ColVert>>>(std::move(lightCube)));
+
+	
+
+	return objects;
+}
+
 int main(int, char**)
 {
     // Setup window
@@ -169,24 +214,18 @@ int main(int, char**)
 	// End of GUI controls settings //
 	
     OpenGLCtx openGlCtx;
+	std::vector<std::unique_ptr<Object3D>> objects;
 	
 	try
 	{		
 		openGlCtx.init();
+		objects = prepareScene(openGlCtx);
 	}
 	catch (std::exception& e)
 	{
 		printf(e.what());
 		return 1;
 	}
-    std::vector<std::unique_ptr<Object3D>> objects;
-    AssimpModelLoader modelLoader(".\\res\\models", ".\\res\\textures", openGlCtx.getShaderProgram());
-	Model cubeObj = modelLoader.loadModel("cube.obj");
-	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
-	Model lightCube = modelLoader.loadModel("cube.obj", aiColor4D{1.0f, 1.0f, 1.0f, 1.0f});
-	lightCube.modelMat.translate(glm::vec3(1.0f, 1.0f, 1.0f));
-	objects.emplace_back(std::make_unique<Model>(std::move(cubeObj)));	
-	objects.emplace_back(std::make_unique<Model>(std::move(lightCube)));
 		
     glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
     glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);

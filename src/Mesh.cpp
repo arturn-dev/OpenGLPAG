@@ -1,8 +1,16 @@
 #include "Mesh.h"
 
-Mesh::Mesh(VertexCollection vertices, 
+#include "Object3D.h"
+
+template <typename T>
+Mesh<T>::Mesh()
+	: openGLRender(ShaderProgram())
+{
+}
+
+template <typename T>
+Mesh<T>::Mesh(std::vector<T> vertices, 
 		   IndexCollection indices, 
-		   const TextureCollection& textures, 
 	       ShaderProgram shaderProgram)
 	: openGLRender(shaderProgram, 
 				   new ElementDraw(indices.size())),
@@ -10,21 +18,18 @@ Mesh::Mesh(VertexCollection vertices,
 	  indices(std::move(indices))
 {
 	openGLRender.setBufferData(this->vertices, this->indices);
-	
-	for (auto&& tex: textures)
-	{
-		openGLRender.addTexture(tex);
-	}
 }
 
-Mesh::Mesh(Mesh&& other) noexcept
+template <typename T>
+Mesh<T>::Mesh(Mesh&& other) noexcept
 	: openGLRender(std::move(other.openGLRender)),
 	  vertices(std::move(other.vertices)),
 	  indices(std::move(other.indices))
 {
 }
 
-Mesh& Mesh::operator=(Mesh&& other) noexcept
+template <typename T>
+Mesh<T>& Mesh<T>::operator=(Mesh<T>&& other) noexcept
 {
 	openGLRender = std::move(other.openGLRender);
 	vertices = std::move(other.vertices);
@@ -33,22 +38,39 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept
 	return *this;
 }
 
-void Mesh::addTexture(OpenGLRender::Texture texture)
+TexMesh::TexMesh(VertexCollection vertices, IndexCollection indices, ShaderProgram shaderProgram,
+	const TextureCollection& textures)
+		: Mesh<Vertex>(std::move(vertices), std::move(indices), std::move(shaderProgram))
+{
+	for (auto&& tex: textures)
+	{
+		openGLRender.addTexture(tex);
+	}
+}
+
+void TexMesh::addTexture(OpenGLRender::Texture texture)
 {
 	openGLRender.addTexture(texture);
 }
 
-void Mesh::draw(const glm::mat4 modelMat)
+template <typename T>
+void Mesh<T>::draw(const glm::mat4 modelMat)
 {
 	openGLRender.draw(modelMat);
 }
 
-void Mesh::deleteMesh()
+template <typename T>
+void Mesh<T>::deleteMesh()
 {
 	openGLRender.deleteOpenGlRender();
 }
 
-const OpenGLRender& Mesh::getOpenGLRender() const
+template <typename T>
+const OpenGLRender& Mesh<T>::getOpenGLRender() const
 {
 	return openGLRender;
 }
+
+template Mesh<Vertex>;
+template Mesh<ColVert>;
+template Mesh<TexVert>;

@@ -2,19 +2,22 @@
 
 #include <utility>
 
-Model::Model(MeshCollection meshes)
+template <typename T>
+Model<T>::Model(std::vector<T> meshes)
 	: Object3D(TMat()), meshes(std::move(meshes))
 {
 
 }
 
-Model::Model(Model&& other) noexcept
+template <typename T>
+Model<T>::Model(Model&& other) noexcept
 	: Object3D(other.modelMat), meshes(std::move(other.meshes))
 {
 	
 }
 
-Model::~Model()
+template <typename T>
+Model<T>::~Model()
 {
 	for (auto&& mesh : meshes)
 	{
@@ -22,7 +25,8 @@ Model::~Model()
 	}
 }
 
-Model& Model::operator=(Model&& other) noexcept
+template <typename T>
+Model<T>& Model<T>::operator=(Model<T>&& other) noexcept
 {
 	meshes = std::move(other.meshes);
 	modelMat = other.modelMat;
@@ -30,7 +34,8 @@ Model& Model::operator=(Model&& other) noexcept
 	return *this;
 }
 
-void Model::draw()
+template <typename T>
+void Model<T>::draw()
 {
 	for (auto&& mesh : meshes)
 	{
@@ -38,7 +43,13 @@ void Model::draw()
 	}
 }
 
-MeshCollection& Model::getMeshes()
+template <typename T>
+std::vector<T>& Model<T>::getMeshes()
 {
 	return meshes;
 }
+
+template Model<TexMesh>;
+template Model<Mesh<Vertex>>;
+template Model<Mesh<ColVert>>;
+template Model<Mesh<TexVert>>;

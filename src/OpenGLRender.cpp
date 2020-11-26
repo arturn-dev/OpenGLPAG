@@ -15,6 +15,7 @@ void OpenGLRender::freeResources()
 	}
 	textureInfos.clear();
 
+	glDeleteBuffers(1, &ebo);
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 }

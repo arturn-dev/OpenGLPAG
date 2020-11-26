@@ -11,12 +11,11 @@
 
 class OpenGLCtx
 {
-	ShaderProgram shaderProgram;	
+	std::vector<std::unique_ptr<ShaderProgram>> shaderPrograms;
 	glm::mat4 viewMat, projMat;
 	GLuint aPos, aCol, aTex;
 	bool wireframeMode = false;
 	
-	void prepareShaders();
 	void renderInit(int windowW, int windowH);
 
 public:
@@ -29,15 +28,14 @@ public:
 	void render(int windowW, int windowH, Object3D* object);
 	void render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot);
 
-	GLint getModelMatLocation() const;
 	GLuint getAPos() const;
 	GLuint getACol() const;
 	GLuint getATex() const;
 	glm::mat4 getViewMat() const;
 
+	const ShaderProgram* addShaderProgram(ShaderProgram&& shaderProgram);
 	void setViewMat(const glm::mat4& viewMat);
 	void setWireframeMode(bool wireframeMode);
-	const ShaderProgram& getShaderProgram() const;
 
 	void deleteCtx();
 };

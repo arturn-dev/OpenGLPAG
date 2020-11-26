@@ -3,35 +3,40 @@
 
 #include <stdexcept>
 
-
-void AssimpModelLoader::setModelDirPath(const std::string& modelDirPath)
+template <typename T>
+void AssimpModelLoader<T>::setModelDirPath(const std::string& modelDirPath)
 {
 	this->modelDirPath = modelDirPath;
 }
 
-void AssimpModelLoader::setTextureDirPath(const std::string& textureDirPath)
+template <typename T>
+void AssimpModelLoader<T>::setTextureDirPath(const std::string& textureDirPath)
 {
 	this->textureDirPath = textureDirPath;
 }
 
-void AssimpModelLoader::setShaderProgram(ShaderProgram shaderProgram)
+template <typename T>
+void AssimpModelLoader<T>::setShaderProgram(ShaderProgram shaderProgram)
 {
 	this->shaderProgram = shaderProgram;
 }
 
-std::string AssimpModelLoader::getModelPath(const std::string& filename)
+template <typename T>
+std::string AssimpModelLoader<T>::getModelPath(const std::string& filename)
 {
 	return modelDirPath + "\\" + filename;
 }
 
-std::string AssimpModelLoader::getTexturePath(const std::string& filename)
+template <typename T>
+std::string AssimpModelLoader<T>::getTexturePath(const std::string& filename)
 {
 	return textureDirPath + "\\" + filename;
 }
 
-MeshCollection AssimpModelLoader::processNode(aiNode* node, const aiScene* scene)
+template <typename T>
+std::vector<T> AssimpModelLoader<T>::processNode(aiNode* node, const aiScene* scene)
 {
-	MeshCollection meshes;
+	std::vector<T> meshes;
 	
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 	{
@@ -41,14 +46,15 @@ MeshCollection AssimpModelLoader::processNode(aiNode* node, const aiScene* scene
 
 	for (unsigned int i = 0; i < node->mNumChildren; ++i)
 	{
-		MeshCollection&& tmp = processNode(node->mChildren[i], scene);
+		std::vector<T>&& tmp = processNode(node->mChildren[i], scene);
 		meshes.insert(meshes.end(), std::make_move_iterator(tmp.begin()), std::make_move_iterator(tmp.end()));
 	}
 
 	return meshes;
 }
 
-Mesh AssimpModelLoader::createMesh(aiMesh* mesh, const aiScene* scene)
+template <>
+TexMesh AssimpModelLoader<TexMesh>::createMesh(aiMesh* mesh, const aiScene* scene)
 {
 	VertexCollection vertices;
 	IndexCollection indices;
@@ -84,10 +90,34 @@ Mesh AssimpModelLoader::createMesh(aiMesh* mesh, const aiScene* scene)
 		textures.insert(textures.end(), ret.begin(), ret.end());
 	}
 
-	return Mesh(vertices, indices, textures, shaderProgram);
+	return TexMesh(vertices, indices, shaderProgram, textures);
 }
 
-TextureCollection AssimpModelLoader::getTexturesOfType(aiMaterial* material, aiTextureType textureType,
+template <>
+Mesh<ColVert> AssimpModelLoader<Mesh<ColVert>>::createMesh(aiMesh* mesh, const aiScene* scene)
+{
+	std::vector<ColVert> vertices;
+	IndexCollection indices;
+
+	// Populate vertex collection.
+	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+	{
+		vertices.emplace_back(mesh->mVertices[i], vertexColor);
+	}
+	
+	// Populate index collection.
+	for(unsigned int i = 0; i < mesh->mNumFaces; i++)
+    {
+        aiFace face = mesh->mFaces[i];
+        for(unsigned int j = 0; j < face.mNumIndices; j++)
+            indices.push_back(face.mIndices[j]);
+	}
+
+	return Mesh<ColVert>(vertices, indices, shaderProgram);
+}
+
+template <typename T>
+TextureCollection AssimpModelLoader<T>::getTexturesOfType(aiMaterial* material, aiTextureType textureType,
 	OpenGLRender::Texture::Type targetTextureType)
 {
 	TextureCollection textures;
@@ -102,17 +132,18 @@ TextureCollection AssimpModelLoader::getTexturesOfType(aiMaterial* material, aiT
 	return textures;
 }
 
-AssimpModelLoader::AssimpModelLoader(const std::string& modelDirPath, const std::string& textureDirPath,
-                                     const ShaderProgram& shaderProgram): modelDirPath(modelDirPath),
-                                                                          textureDirPath(textureDirPath),
-                                                                          shaderProgram(shaderProgram)
+template <typename T>
+AssimpModelLoader<T>::AssimpModelLoader(const std::string& modelDirPath, const std::string& textureDirPath)
+	: modelDirPath(modelDirPath), textureDirPath(textureDirPath)
 {
 }
 
-Model AssimpModelLoader::loadModel(const std::string& modelFilename, aiColor4D col)
+template <typename T>
+Model<T> AssimpModelLoader<T>::loadModel(const std::string& modelFilename, const ShaderProgram& shaderProgram, aiColor4D col)
 {
 	vertexColor = col;
-	
+	this->shaderProgram = shaderProgram;
+		
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(getModelPath(modelFilename), aiProcess_Triangulate);
 
@@ -121,5 +152,9 @@ Model AssimpModelLoader::loadModel(const std::string& modelFilename, aiColor4D c
 		throw std::logic_error("[Assimp] " + std::string(importer.GetErrorString()));
 	}
 	
-	return Model(processNode(scene->mRootNode, scene));
+	return Model<T>(processNode(scene->mRootNode, scene));
 }
+
+template AssimpModelLoader<TexMesh>;
+template AssimpModelLoader<Mesh<ColVert>>;
+//template AssimpModelLoader<Mesh<TexVert>>;

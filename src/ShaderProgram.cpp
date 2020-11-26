@@ -1,5 +1,7 @@
 #include <stdexcept>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "ShaderProgram.h"
 
 std::string ShaderProgram::getInfoLog()
@@ -80,6 +82,11 @@ GLint ShaderProgram::getUniformLocation(const std::string& name) const
 {
 	use();
 	return glGetUniformLocation(programID, name.c_str());	
+}
+
+void ShaderProgram::setUniformVec3(const std::string& name, glm::vec3& vec) const
+{
+	glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(vec));
 }
 
 GLuint ShaderProgram::getProgramId() const
