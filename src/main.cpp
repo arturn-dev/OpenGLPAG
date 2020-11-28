@@ -46,6 +46,9 @@ float cursorDeltaX = 0;
 float cursorDeltaY = 0;
 float scrollDelta = 0;
 
+float timeDelta = 0.0;
+double timeLastFrame = 0.0;
+
 void mouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
 	const auto xPosf = static_cast<float>(xPos);
@@ -78,10 +81,34 @@ void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	scrollDelta = static_cast<float>(yoffset);
 }
 
+void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx)
+{
+	auto moveIncrement = 2.5f * timeDelta;
+    auto ifPressed = [window](int key)->bool { return glfwGetKey(window, key) == GLFW_PRESS; };
+	
+	if (ifPressed(GLFW_KEY_W))
+        openGlCtx.getCamera().moveFB(moveIncrement);
+	if (ifPressed(GLFW_KEY_S))
+        openGlCtx.getCamera().moveFB(-moveIncrement);
+	if (ifPressed(GLFW_KEY_A))
+        openGlCtx.getCamera().moveLR(moveIncrement);
+	if (ifPressed(GLFW_KEY_D))
+        openGlCtx.getCamera().moveLR(-moveIncrement);
+}
+
+void setCameraRotation(OpenGLCtx& openGlCtx)
+{
+	float pitchDeg = -cursorDeltaY * mouseSensitivity;
+	float yawDeg = cursorDeltaX * mouseSensitivity;
+
+	openGlCtx.getCamera().rotate(pitchDeg, yawDeg);
+}
+
 std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 {
 	std::vector<std::unique_ptr<Object3D>> objects;
     glm::vec3 lightColor{1.0f, 0.5f, 0.5f};
+	glm::vec3 lightPos{3.0f, 0.0f, 4.0f};
 	
 	// Prepare shaders
 	
@@ -97,6 +124,7 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	basicShader.attachShader(basicVert);
 	basicShader.attachShader(basicFrag);
 	basicShader.makeProgram();
+	basicShader.setUniformVec3("lightPos", lightPos);
 	basicShader.setUniformVec3("lightColor", lightColor);
 
     ShaderProgram lightShader;
@@ -108,14 +136,16 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
 	
 	// Load and setup models
-	
+
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
+	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
+	//cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+	cubeObj.modelMat.scale(glm::vec3(10.0f, 1.0f, 1.0f));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
+	
 	AssimpModelLoader<Mesh<ColVert>> modelLoader2(".\\res\\models", ".\\res\\textures");
-	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr);
-	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
 	Model<Mesh<ColVert>> lightCube = modelLoader2.loadModel("cube.obj", *sp2Ptr, aiColor4D{lightColor.r, lightColor.g, lightColor.b, 1.0f});
-	lightCube.modelMat.translate(glm::vec3(1.0f, 0.0f, -5.0f));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));	
+	lightCube.modelMat.translate(lightPos);
 	objects.emplace_back(std::make_unique<Model<Mesh<ColVert>>>(std::move(lightCube)));
 
 	
@@ -206,9 +236,6 @@ int main(int, char**)
 
 	// GUI controls settings //
 
-	int cylinderRes = 3;
-	const int minCylinderRes = 3;
-	const int maxCylinderRes = 30;
 	bool isWireframeMode = false;
 
 	// End of GUI controls settings //
@@ -227,9 +254,6 @@ int main(int, char**)
 		return 1;
 	}
 		
-    glm::vec3 xRotationVec(1.0f, 0.0f, 0.0f);
-    glm::vec3 yRotationVec(0.0f, 1.0f, 0.0f);
-	
 	glfwSetScrollCallback(window, mouseScrollCallback);
 	
     // Main loop
@@ -241,6 +265,13 @@ int main(int, char**)
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
+    	
+    	processKbInput(window, openGlCtx);
+    	setCameraRotation(openGlCtx);
+
+    	auto timeCurrentFrame = glfwGetTime();
+    	timeDelta = static_cast<float>(timeCurrentFrame - timeLastFrame);
+    	timeLastFrame = timeCurrentFrame;
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -256,8 +287,6 @@ int main(int, char**)
             ImGui::Begin("Solar System");
         	ImGui::Checkbox("Wireframe mode", &isWireframeMode);
 
-        	ImGui::SliderInt("Cylinder resolution", &cylinderRes, minCylinderRes, maxCylinderRes);
-        	
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
@@ -267,6 +296,7 @@ int main(int, char**)
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
+    	openGlCtx.setWireframeMode(isWireframeMode);
     	openGlCtx.render(display_w, display_h, objects.begin(), objects.end());
     	    	
         cursorDeltaX = 0;

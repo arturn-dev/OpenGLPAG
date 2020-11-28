@@ -92,7 +92,7 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 	attribute = shaderProgram.getAttribNorm();
 	if (attribute != -1U)
 	{
-		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), 
 						  reinterpret_cast<const void*>(offsetof(Vertex, normal)));
 		glEnableVertexAttribArray(attribute);
 	}
@@ -256,7 +256,8 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 		i++;
 	}
 
-	glUniformMatrix4fv(shaderProgram.getUniformLocation("model"), 1, GL_FALSE, glm::value_ptr(modelMat));
+	shaderProgram.setUniformMat4("model", modelMat);
+	shaderProgram.setUniformMat4("normModel", glm::transpose(glm::inverse(modelMat)));
 	
 	glBindVertexArray(vao);
 	drawImpl->draw();

@@ -19,7 +19,8 @@ public:
 	void deleteProgram();
 
 	GLint getUniformLocation(const std::string& name) const;
-	void setUniformVec3(const std::string& name, glm::vec3& vec) const;
+	void setUniformVec3(const std::string& name, glm::vec3 vec) const;
+	void setUniformMat4(const std::string& name, glm::mat4 mat) const;
 	
 	void setAttribPosByName(const std::string& attribPosName);
 	void setAttribColByName(const std::string& attribColName);

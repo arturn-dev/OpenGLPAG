@@ -84,9 +84,20 @@ GLint ShaderProgram::getUniformLocation(const std::string& name) const
 	return glGetUniformLocation(programID, name.c_str());	
 }
 
-void ShaderProgram::setUniformVec3(const std::string& name, glm::vec3& vec) const
+void ShaderProgram::setUniformVec3(const std::string& name, glm::vec3 vec) const
 {
-	glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(vec));
+	use();
+	GLint uniformLocation = getUniformLocation(name);
+	if (uniformLocation != -1)
+		glUniform3fv(uniformLocation, 1, glm::value_ptr(vec));
+}
+
+void ShaderProgram::setUniformMat4(const std::string& name, glm::mat4 mat) const
+{
+	use();
+	GLint uniformLocation = getUniformLocation(name);
+	if (uniformLocation != -1)
+		glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 GLuint ShaderProgram::getProgramId() const

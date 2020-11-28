@@ -16,7 +16,7 @@
 //}
 
 OpenGLCtx::OpenGLCtx()
-	: viewMat(glm::mat4(1.0f)), projMat(glm::mat4(1.0f))
+	: projMat(glm::mat4(1.0f)), camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f))
 {	
 	
 }
@@ -26,9 +26,10 @@ void OpenGLCtx::init()
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 
-	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -10.0f));
-	viewMat = glm::rotate(viewMat, glm::radians(60.0f), glm::vec3(1.0f, 1.0f, 0.0f));	
-	
+	//viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -10.0f));
+	//viewMat = glm::rotate(viewMat, glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	camera.moveFB(-10.0f);
 }
 
 void OpenGLCtx::renderInit(int windowW, int windowH)
@@ -47,11 +48,12 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 10000.0f);
 	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 10000.0f);
 
+	glm::mat4 viewMat = camera.getViewMat();
 	for (auto&& shaderProgram : shaderPrograms)
 	{
-		shaderProgram->use();
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram->getProgramId(), "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram->getProgramId(), "proj"), 1, GL_FALSE, glm::value_ptr(projMat));
+		shaderProgram->setUniformMat4("view", viewMat);
+		shaderProgram->setUniformVec3("viewPos", camera.getPosition()); // TODO: Move this operation to shaders.
+		shaderProgram->setUniformMat4("proj", projMat);
 	}
 }
 
@@ -98,9 +100,9 @@ GLuint OpenGLCtx::getATex() const
 	return aTex;
 }
 
-glm::mat4 OpenGLCtx::getViewMat() const
+FPSCamera& OpenGLCtx::getCamera()
 {
-	return viewMat;
+	return camera;
 }
 
 const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
@@ -113,11 +115,6 @@ const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
 	shaderPrograms.push_back(std::make_unique<ShaderProgram>(std::move(shaderProgram)));
 
 	return (shaderPrograms.end() - 1)->get();
-}
-
-void OpenGLCtx::setViewMat(const glm::mat4& viewMat)
-{
-	this->viewMat = viewMat;
 }
 
 void OpenGLCtx::setWireframeMode(bool wireframeMode)

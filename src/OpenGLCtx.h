@@ -8,12 +8,14 @@
 #include "ShaderProgram.h"
 #include "Object3D.h"
 #include "SceneGraphNode.h"
+#include "Camera.h"
 
 class OpenGLCtx
 {
+	FPSCamera camera;
 	std::vector<std::unique_ptr<ShaderProgram>> shaderPrograms;
-	glm::mat4 viewMat, projMat;
-	GLuint aPos, aCol, aTex;
+	glm::mat4 projMat;
+	GLuint aPos, aCol, aTex;	
 	bool wireframeMode = false;
 	
 	void renderInit(int windowW, int windowH);
@@ -31,10 +33,9 @@ public:
 	GLuint getAPos() const;
 	GLuint getACol() const;
 	GLuint getATex() const;
-	glm::mat4 getViewMat() const;
-
+	FPSCamera& getCamera();
+	
 	const ShaderProgram* addShaderProgram(ShaderProgram&& shaderProgram);
-	void setViewMat(const glm::mat4& viewMat);
 	void setWireframeMode(bool wireframeMode);
 
 	void deleteCtx();
