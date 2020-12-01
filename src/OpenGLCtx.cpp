@@ -52,7 +52,7 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	for (auto&& shaderProgram : shaderPrograms)
 	{
 		shaderProgram->setUniformMat4("view", viewMat);
-		shaderProgram->setUniformVec3("viewPos", camera.getPosition()); // TODO: Move this operation to shaders.
+		shaderProgram->setUniformVec3("viewPos", camera.getPosition());
 		shaderProgram->setUniformMat4("proj", projMat);
 	}
 }
@@ -107,6 +107,7 @@ FPSCamera& OpenGLCtx::getCamera()
 
 const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
 {
+	// TODO: Move setting the attributes to the ShaderProgram class itself.
 	shaderProgram.setAttribPosByName("pos_in");
 	shaderProgram.setAttribColByName("col_in");
 	shaderProgram.setAttribTexByName("tex_in");

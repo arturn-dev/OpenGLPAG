@@ -94,6 +94,10 @@ void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx)
         openGlCtx.getCamera().moveLR(moveIncrement);
 	if (ifPressed(GLFW_KEY_D))
         openGlCtx.getCamera().moveLR(-moveIncrement);
+	if (ifPressed(GLFW_KEY_R))
+        openGlCtx.getCamera().moveUD(moveIncrement);
+	if (ifPressed(GLFW_KEY_F))
+        openGlCtx.getCamera().moveUD(-moveIncrement);
 }
 
 void setCameraRotation(OpenGLCtx& openGlCtx)
@@ -109,6 +113,8 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	std::vector<std::unique_ptr<Object3D>> objects;
     glm::vec3 lightColor{1.0f, 0.5f, 0.5f};
 	glm::vec3 lightPos{3.0f, 0.0f, 4.0f};
+	glm::vec3 dirLightVec{0.0f, -0.8f, -1.0f};
+	glm::vec3 dirLightCol{1.0f, 1.0f, 1.0f};
 	
 	// Prepare shaders
 	
@@ -124,8 +130,12 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	basicShader.attachShader(basicVert);
 	basicShader.attachShader(basicFrag);
 	basicShader.makeProgram();
-	basicShader.setUniformVec3("lightPos", lightPos);
-	basicShader.setUniformVec3("lightColor", lightColor);
+	basicShader.setUniformVec3("dirLight.direction", dirLightVec);
+	basicShader.setUniformVec3("dirLight.lightColors.diffuse", dirLightCol);
+	basicShader.setUniformVec3("dirLight.lightColors.specular", dirLightCol);
+	basicShader.setUniformVec3("pointLight.position", lightPos);
+	basicShader.setUniformVec3("pointLight.lightColors.diffuse", lightColor);
+	basicShader.setUniformVec3("pointLight.lightColors.specular", lightColor);
 
     ShaderProgram lightShader;
 	lightShader.attachShader(basicVert);
@@ -139,7 +149,7 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
 	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
-	//cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
 	cubeObj.modelMat.scale(glm::vec3(10.0f, 1.0f, 1.0f));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
 	

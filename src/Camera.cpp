@@ -27,6 +27,11 @@ void FPSCamera::moveLR(float units)
 	position -= glm::normalize(glm::cross(center, up)) * units;
 }
 
+void FPSCamera::moveUD(float units)
+{
+	position += up * units;
+}
+
 void FPSCamera::rotate(float pitchDeg, float yawDeg)
 {
 	glm::vec3 vec;

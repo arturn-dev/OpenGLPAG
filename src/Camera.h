@@ -27,6 +27,7 @@ public:
 
 	void moveFB(float units);
 	void moveLR(float units);
+	void moveUD(float units);
 	void rotate(float pitchDeg, float yawDeg);
 
 	glm::mat4 getViewMat() const override;

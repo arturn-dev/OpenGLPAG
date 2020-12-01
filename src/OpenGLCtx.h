@@ -13,6 +13,9 @@
 class OpenGLCtx
 {
 	FPSCamera camera;
+	// TODO: Currently shader programs are stored in two places: here and individual ones in every instance of the OpenGLRender class.
+	// Let's try to remove them from here and retrieve them from the Models before the draw to set the uniforms
+	// or pass some structure to the draw() method with information needed for the shaders' uniforms.
 	std::vector<std::unique_ptr<ShaderProgram>> shaderPrograms;
 	glm::mat4 projMat;
 	GLuint aPos, aCol, aTex;	
