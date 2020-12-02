@@ -15,9 +15,9 @@ void OpenGLRender::freeResources()
 	}
 	textureInfos.clear();
 
-	glDeleteBuffers(1, &ebo);
+	/*glDeleteBuffers(1, &ebo);
 	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+	glDeleteVertexArrays(1, &vao);*/
 }
 
 OpenGLRender::OpenGLRender(ShaderProgram shaderProgram)
@@ -30,25 +30,60 @@ OpenGLRender::OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod)
 {
 }
 
-OpenGLRender::OpenGLRender(OpenGLRender&& other) noexcept: vao(other.vao),
-                                                           vbo(other.vbo),
-                                                           ebo(other.ebo),
-                                                           textureInfos(std::move(other.textureInfos)),
-                                                           shaderProgram(std::move(other.shaderProgram)),
-                                                           drawImpl(std::move(other.drawImpl))
-{
-}
+//OpenGLRender::OpenGLRender(OpenGLRender&& other) noexcept: vao(std::move(other.vao)),
+//                                                           vbo(std::move(other.vbo)),
+//                                                           ebo(std::move(other.ebo)),
+//                                                           textureInfos(std::move(other.textureInfos)),
+//                                                           shaderProgram(std::move(other.shaderProgram)),
+//                                                           drawImpl(std::move(other.drawImpl))
+//{
+//}
 
-OpenGLRender& OpenGLRender::operator=(OpenGLRender&& other) noexcept
+OpenGLRender::OpenGLRender(const OpenGLRender& other)
+	: OpenGLRender()
 {
 	vao = other.vao;
 	vbo = other.vbo;
 	ebo = other.ebo;
+	textureInfos = other.textureInfos;
+	shaderProgram = other.shaderProgram;
+	drawImpl = other.drawImpl;
+}
+
+OpenGLRender::OpenGLRender(OpenGLRender&& other) noexcept
+	: OpenGLRender()
+{
+	swap(*this, other);
+}
+
+OpenGLRender& OpenGLRender::operator=(OpenGLRender other)
+{
+	/*vao = std::move(other.vao);
+	vbo = other.vbo;
+	ebo = other.ebo;
 	textureInfos = std::move(other.textureInfos);
 	shaderProgram = std::move(other.shaderProgram);
-	drawImpl = std::move(other.drawImpl);
+	drawImpl = std::move(other.drawImpl);*/
 
+	swap(*this, other);
+	
 	return *this;
+}
+
+void swap(OpenGLRender& first, OpenGLRender& second) noexcept
+{
+	using std::swap;
+
+	swap(first.vao, second.vao);
+	swap(first.vbo, second.vbo);
+	swap(first.ebo, second.ebo);
+	swap(first.textureInfos, second.textureInfos);
+	swap(first.shaderProgram, second.shaderProgram);
+	swap(first.drawImpl, second.drawImpl);
+}
+
+OpenGLRender::OpenGLRender()
+{
 }
 
 OpenGLRender::~OpenGLRender()
@@ -58,7 +93,7 @@ OpenGLRender::~OpenGLRender()
 template <>
 void OpenGLRender::setVertexAttribPointers<Vertex>()
 {
-	glBindVertexArray(vao);
+	glBindVertexArray(*vao);
 
 	GLuint attribute = shaderProgram.getAttribPos();
 	if (attribute == -1U)
@@ -103,7 +138,7 @@ void OpenGLRender::setVertexAttribPointers<Vertex>()
 template<>
 void OpenGLRender::setVertexAttribPointers<ColVert>()
 {
-	glBindVertexArray(vao);
+	glBindVertexArray(*vao);
 
 	GLuint attribute = shaderProgram.getAttribPos();
 	if (attribute == -1U)
@@ -130,7 +165,7 @@ void OpenGLRender::setVertexAttribPointers<ColVert>()
 template<>
 void OpenGLRender::setVertexAttribPointers<TexVert>()
 {
-	glBindVertexArray(vao);
+	glBindVertexArray(*vao);
 
 	GLuint attribute = shaderProgram.getAttribPos();
 	if (attribute == -1U)
@@ -156,10 +191,12 @@ void OpenGLRender::setVertexAttribPointers<TexVert>()
 
 void OpenGLRender::setIndexBufferData(const std::vector<GLuint>& indices)
 {
-	glBindVertexArray(vao);
+	ebo = std::shared_ptr<GLuint>(new GLuint, [](auto p) { glDeleteBuffers(1, p); });
 	
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBindVertexArray(*vao);
+	
+	glGenBuffers(1, ebo.get());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
@@ -168,11 +205,14 @@ void OpenGLRender::setIndexBufferData(const std::vector<GLuint>& indices)
 template <typename T>
 void OpenGLRender::setVertexBufferData(const std::vector<T>& verts)
 {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	vao = std::shared_ptr<GLuint>(new GLuint, [](auto p) { glDeleteVertexArrays(1, p); });
+	vbo = std::shared_ptr<GLuint>(new GLuint, [](auto p) { glDeleteBuffers(1, p); });
+	
+	glGenVertexArrays(1, vao.get());
+	glBindVertexArray(*vao);
 
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glGenBuffers(1, vbo.get());
+	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(T), verts.data(), GL_STATIC_DRAW);
 	
 	glBindVertexArray(0);
@@ -259,7 +299,7 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 	shaderProgram.setUniformMat4("model", modelMat);
 	shaderProgram.setUniformMat4("normModel", glm::transpose(glm::inverse(modelMat)));
 	
-	glBindVertexArray(vao);
+	glBindVertexArray(*vao);
 	drawImpl->draw();
 
 	i = 0;
@@ -296,3 +336,5 @@ template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& v
 template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts, const std::vector<GLuint>& indices);
 template void OpenGLRender::setBufferData<TexVert>(const std::vector<TexVert>& verts);
 template void OpenGLRender::setBufferData<TexVert>(const std::vector<TexVert>& verts, const std::vector<GLuint>& indices);
+
+

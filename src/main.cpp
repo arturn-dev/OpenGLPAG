@@ -149,9 +149,24 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
 	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
-	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+	//cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
 	cubeObj.modelMat.scale(glm::vec3(10.0f, 1.0f, 1.0f));
+	auto cubeObj2 = cubeObj;
+	cubeObj2.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
+	auto cubeObj3 = cubeObj2;
+	cubeObj3.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
+	auto cubeObj4 = cubeObj3;
+	cubeObj4.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
+	auto cubeObj5= cubeObj4;
+	cubeObj5.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
+	auto cubeObj6= cubeObj5;
+	cubeObj6.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj2)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj3)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj4)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj5)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj6)));
 	
 	AssimpModelLoader<Mesh<ColVert>> modelLoader2(".\\res\\models", ".\\res\\textures");
 	Model<Mesh<ColVert>> lightCube = modelLoader2.loadModel("cube.obj", *sp2Ptr, aiColor4D{lightColor.r, lightColor.g, lightColor.b, 1.0f});

@@ -5,7 +5,6 @@
 #include "Object3D.h"
 #include "Mesh.h"
 
-//typedef std::vector<Mesh> MeshCollection;
 
 template <typename T>
 class Model : public Object3D
@@ -14,11 +13,17 @@ class Model : public Object3D
 
 public:
 	explicit Model(std::vector<T> meshes);
-	Model(const Model& other) = delete;
-	Model(Model&& other) noexcept;
-	virtual ~Model();
+	Model(const Model<T>& other);
+	Model(Model<T>&& other) noexcept;
+	Model<T>& operator=(Model<T> other);
+	friend void swap(Model<T>& first, Model<T>& second) noexcept
+	{
+		using std::swap;
+		swap(first.modelMat, second.modelMat);
+		swap(first.meshes, second.meshes);
+	}
 
-	Model<T>& operator=(Model<T>&& other) noexcept;
+	virtual ~Model();
 
 	void draw() override;
 

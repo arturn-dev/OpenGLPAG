@@ -72,7 +72,7 @@ vec3 dirLightCalc(DirLight _dirLight)
 // Point light calculation functions.
 /////////////////////////////////////
 
-vec3 pointLight_calcDiffLight(PointLight _pointLight, float attenuation)
+vec3 pointLight_calcDiffLight(PointLight _pointLight)
 {
 	vec3 lightVec = normalize(_pointLight.position - fragPos);
 	vec3 diffuseLight = max(dot(normN, lightVec), 0.0f) * _pointLight.lightColors.diffuse;
@@ -80,7 +80,7 @@ vec3 pointLight_calcDiffLight(PointLight _pointLight, float attenuation)
 	return diffuseLight;
 }
 
-vec3 pointLight_calcSpecLight(PointLight _pointLight, float attenuation)
+vec3 pointLight_calcSpecLight(PointLight _pointLight)
 {
 	vec3 lightVec = normalize(_pointLight.position - fragPos);
 	vec3 reflectVec = reflect(-lightVec, normN);
@@ -94,9 +94,9 @@ vec3 pointLightCalc(PointLight _pointLight)
 	float d = distance(_pointLight.position, fragPos);
 	float attenuation = 1.0f / (pointLightConstant + pointLightLinear * d + pointLightQuadratic * d * d);
 
-	vec3 outputLight = pointLight_calcDiffLight(_pointLight, attenuation) + pointLight_calcSpecLight(_pointLight, attenuation);
+	vec3 outputLight = pointLight_calcDiffLight(_pointLight) + pointLight_calcSpecLight(_pointLight);
 
-	return outputLight;
+	return outputLight * attenuation;
 }
 
 //////////////

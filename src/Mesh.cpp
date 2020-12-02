@@ -13,27 +13,30 @@ Mesh<T>::Mesh(std::vector<T> vertices,
 		   IndexCollection indices, 
 	       ShaderProgram shaderProgram)
 	: openGLRender(shaderProgram, 
-				   new ElementDraw(indices.size())),
-	  vertices(std::move(vertices)),
-	  indices(std::move(indices))
+				   new ElementDraw(indices.size()))
 {
-	openGLRender.setBufferData(this->vertices, this->indices);
+	openGLRender.setBufferData(vertices, indices);
+}
+
+template <typename T>
+Mesh<T>::Mesh(const Mesh& other)
+	: openGLRender(other.openGLRender)
+{
+	
 }
 
 template <typename T>
 Mesh<T>::Mesh(Mesh&& other) noexcept
-	: openGLRender(std::move(other.openGLRender)),
-	  vertices(std::move(other.vertices)),
-	  indices(std::move(other.indices))
+	: Mesh()
 {
+	swap(*this, other);
 }
 
 template <typename T>
-Mesh<T>& Mesh<T>::operator=(Mesh<T>&& other) noexcept
+Mesh<T>& Mesh<T>::operator=(Mesh<T> other)
 {
-	openGLRender = std::move(other.openGLRender);
-	vertices = std::move(other.vertices);
-	indices = std::move(other.indices);
+	//openGLRender = std::move(other.openGLRender);
+	swap(*this, other);
 
 	return *this;
 }

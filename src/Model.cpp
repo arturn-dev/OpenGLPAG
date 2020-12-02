@@ -10,10 +10,27 @@ Model<T>::Model(std::vector<T> meshes)
 }
 
 template <typename T>
-Model<T>::Model(Model&& other) noexcept
-	: Object3D(other.modelMat), meshes(std::move(other.meshes))
+Model<T>::Model(const Model<T>& other)
+	: Object3D(other.modelMat), meshes(other.meshes)
 {
+}
+
+template <typename T>
+Model<T>::Model(Model<T>&& other) noexcept
+	: Object3D()
+{
+	swap(*this, other);
+}
+
+template <typename T>
+Model<T>& Model<T>::operator=(Model<T> other)
+{
+	/*meshes = std::move(other.meshes);
+	modelMat = other.modelMat;*/
+
+	swap(*this, other);
 	
+	return *this;
 }
 
 template <typename T>
@@ -23,15 +40,6 @@ Model<T>::~Model()
 	{
 		mesh.deleteMesh();
 	}
-}
-
-template <typename T>
-Model<T>& Model<T>::operator=(Model<T>&& other) noexcept
-{
-	meshes = std::move(other.meshes);
-	modelMat = other.modelMat;
-
-	return *this;
 }
 
 template <typename T>

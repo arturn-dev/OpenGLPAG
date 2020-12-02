@@ -14,20 +14,21 @@ class Mesh
 {
 protected:
 	OpenGLRender openGLRender;
-	
-	std::vector<T> vertices;
-	IndexCollection indices;
 
 public:
 	Mesh();
 	Mesh(std::vector<T> vertices, 
 		 IndexCollection indices,
 		 ShaderProgram shaderProgram);
-	Mesh(const Mesh& other) = delete;
+	Mesh(const Mesh& other);
 	Mesh(Mesh&& other) noexcept;
-	Mesh<T>& operator=(Mesh<T>&& other) noexcept;
+	Mesh<T>& operator=(Mesh<T> other);
+	friend void swap(Mesh<T>& first, Mesh<T>& second) noexcept
+	{
+		using std::swap;
 
-	//void addTexture(OpenGLRender::Texture texture);
+		swap(first.openGLRender, second.openGLRender);
+	}
 
 	void draw(const glm::mat4);
 	void deleteMesh();
@@ -42,6 +43,29 @@ public:
 		 IndexCollection indices, 
 		 ShaderProgram shaderProgram, 
 		 const TextureCollection& textures);
+
+	TexMesh(const TexMesh& other)
+		: Mesh<Vertex>(other)
+	{
+	}
+
+	TexMesh(TexMesh&& other) noexcept
+		: Mesh<Vertex>()
+	{
+		swap(*this, other);
+	}
+
+	TexMesh& operator=(TexMesh other)
+	{
+		swap(*this, other);
+		return *this;
+	}
+
+	friend void swap(TexMesh& lhs, TexMesh& rhs) noexcept
+	{
+		using std::swap;
+		swap(static_cast<Mesh<Vertex>&>(lhs), static_cast<Mesh<Vertex>&>(rhs));
+	}
 
 	void addTexture(OpenGLRender::Texture texture);
 };

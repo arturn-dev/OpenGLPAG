@@ -25,7 +25,7 @@ public:
 		std::string path;
 	};
 
-	std::unique_ptr<DrawImpl> drawImpl;
+	std::shared_ptr<DrawImpl> drawImpl;
 	
 private:
 	struct TextureInfo
@@ -34,11 +34,12 @@ private:
 		Texture texture;
 	};
 	
-	GLuint vao, vbo, ebo;
-	std::vector<TextureInfo> textureInfos;
+	//GLuint vao, vbo, ebo;
+	std::shared_ptr<GLuint> vao, vbo, ebo;
+	std::vector<TextureInfo> textureInfos; // TODO: Share the textures too.
 	ShaderProgram shaderProgram;
 	
-
+	OpenGLRender();
 	template <typename T>
 	void setVertexAttribPointers();
 	template <typename T>
@@ -49,11 +50,13 @@ private:
 public:
 	explicit OpenGLRender(ShaderProgram shaderProgram);
 	OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod);
-	OpenGLRender(const OpenGLRender& other) = delete;
+	
+	OpenGLRender(const OpenGLRender& other);
 	OpenGLRender(OpenGLRender&& other) noexcept;
-	~OpenGLRender();
-
-	OpenGLRender& operator=(OpenGLRender&& other) noexcept;
+	OpenGLRender& operator=(OpenGLRender other);
+	friend void swap(OpenGLRender& first, OpenGLRender& second) noexcept;
+	
+	~OpenGLRender();	
 
 	template <typename T>
 	void setBufferData(const std::vector<T>& verts);		
