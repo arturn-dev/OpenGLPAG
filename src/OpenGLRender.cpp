@@ -7,18 +7,6 @@
 #include "Vertex.h"
 #include "TextureLoader.h"
 
-void OpenGLRender::freeResources()
-{
-	for (auto&& texture : textureInfos)
-	{
-		glDeleteTextures(1, &texture.id);
-	}
-	textureInfos.clear();
-
-	/*glDeleteBuffers(1, &ebo);
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);*/
-}
 
 OpenGLRender::OpenGLRender(ShaderProgram shaderProgram)
 	: OpenGLRender(shaderProgram, nullptr)
@@ -29,15 +17,6 @@ OpenGLRender::OpenGLRender(ShaderProgram shaderProgram, DrawImpl* drawMethod)
 	: shaderProgram(shaderProgram), drawImpl(drawMethod)
 {
 }
-
-//OpenGLRender::OpenGLRender(OpenGLRender&& other) noexcept: vao(std::move(other.vao)),
-//                                                           vbo(std::move(other.vbo)),
-//                                                           ebo(std::move(other.ebo)),
-//                                                           textureInfos(std::move(other.textureInfos)),
-//                                                           shaderProgram(std::move(other.shaderProgram)),
-//                                                           drawImpl(std::move(other.drawImpl))
-//{
-//}
 
 OpenGLRender::OpenGLRender(const OpenGLRender& other)
 	: OpenGLRender()
@@ -58,13 +37,6 @@ OpenGLRender::OpenGLRender(OpenGLRender&& other) noexcept
 
 OpenGLRender& OpenGLRender::operator=(OpenGLRender other)
 {
-	/*vao = std::move(other.vao);
-	vbo = other.vbo;
-	ebo = other.ebo;
-	textureInfos = std::move(other.textureInfos);
-	shaderProgram = std::move(other.shaderProgram);
-	drawImpl = std::move(other.drawImpl);*/
-
 	swap(*this, other);
 	
 	return *this;
@@ -245,18 +217,20 @@ void OpenGLRender::addTexture(Texture texture)
 	TextureLoader texLoader;
 	unsigned char* textureData = texLoader.loadTextureFromPath(texture.path, width, height, channelsCount);
 	
-	textureInfos.emplace_back();
-	auto lastTexInfoIt = (textureInfos.end() - 1);
-	lastTexInfoIt->texture = texture;
-
-	glGenTextures(1, &lastTexInfoIt->id);
-	glBindTexture(GL_TEXTURE_2D, lastTexInfoIt->id);
+	GLuint tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(textureData));
 	glGenerateMipmap(GL_TEXTURE_2D);
+
+	textureInfos.push_back(
+		std::shared_ptr<TextureInfo>(
+			new TextureInfo{tex, texture},
+			[](auto p){ glDeleteTextures(1, &p->id); }));
 }
 
 void OpenGLRender::draw(const glm::mat4 modelMat)
@@ -274,10 +248,10 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 	for (auto&& textureInfo : textureInfos)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, textureInfo.id);
+		glBindTexture(GL_TEXTURE_2D, textureInfo->id);
 
 		std::string uniformName;
-		switch(textureInfo.texture.type)
+		switch(textureInfo->texture.type)
 		{
 			case Texture::TexDiff:
 			{
@@ -314,17 +288,12 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 	glBindVertexArray(0);
 }
 
-void OpenGLRender::deleteOpenGlRender()
-{
-	freeResources();
-}
-
 std::vector<OpenGLRender::Texture> OpenGLRender::getTextures() const
 {
 	std::vector<Texture> textures;
 	for (auto&& textureInfo : textureInfos)
 	{
-		textures.push_back(textureInfo.texture);
+		textures.push_back(textureInfo->texture);
 	}
 
 	return textures;

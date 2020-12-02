@@ -31,7 +31,6 @@ public:
 	}
 
 	void draw(const glm::mat4);
-	void deleteMesh();
 
 	const OpenGLRender& getOpenGLRender() const;
 };

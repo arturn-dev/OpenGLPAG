@@ -34,9 +34,8 @@ private:
 		Texture texture;
 	};
 	
-	//GLuint vao, vbo, ebo;
 	std::shared_ptr<GLuint> vao, vbo, ebo;
-	std::vector<TextureInfo> textureInfos; // TODO: Share the textures too.
+	std::vector<std::shared_ptr<TextureInfo>> textureInfos; // TODO: Share the textures too.
 	ShaderProgram shaderProgram;
 	
 	OpenGLRender();
@@ -45,7 +44,6 @@ private:
 	template <typename T>
 	void setVertexBufferData(const std::vector<T>& verts);
 	void setIndexBufferData(const std::vector<GLuint>& indices);
-	void freeResources();
 
 public:
 	explicit OpenGLRender(ShaderProgram shaderProgram);
@@ -65,8 +63,6 @@ public:
 	
 	void addTexture(Texture texture);
 	void draw(const glm::mat4 modelMat);
-
-	void deleteOpenGlRender();
 
 	std::vector<Texture> getTextures() const;
 };

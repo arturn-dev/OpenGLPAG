@@ -25,9 +25,6 @@ Model<T>::Model(Model<T>&& other) noexcept
 template <typename T>
 Model<T>& Model<T>::operator=(Model<T> other)
 {
-	/*meshes = std::move(other.meshes);
-	modelMat = other.modelMat;*/
-
 	swap(*this, other);
 	
 	return *this;
@@ -36,10 +33,7 @@ Model<T>& Model<T>::operator=(Model<T> other)
 template <typename T>
 Model<T>::~Model()
 {
-	for (auto&& mesh : meshes)
-	{
-		mesh.deleteMesh();
-	}
+	
 }
 
 template <typename T>

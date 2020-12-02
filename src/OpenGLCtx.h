@@ -18,7 +18,6 @@ class OpenGLCtx
 	// or pass some structure to the draw() method with information needed for the shaders' uniforms.
 	std::vector<std::unique_ptr<ShaderProgram>> shaderPrograms;
 	glm::mat4 projMat;
-	GLuint aPos, aCol, aTex;	
 	bool wireframeMode = false;
 	
 	void renderInit(int windowW, int windowH);

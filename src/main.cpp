@@ -29,6 +29,7 @@
 
 #include "AssimpModelLoader.h"
 #include "Model.h"
+#include "LightSource.h"
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -44,7 +45,7 @@ float cursorLastX = 0;
 float cursorLastY = 0;
 float cursorDeltaX = 0;
 float cursorDeltaY = 0;
-float scrollDelta = 0;
+float cameraSpeedMult = 1.0f;
 
 float timeDelta = 0.0;
 double timeLastFrame = 0.0;
@@ -78,12 +79,14 @@ void mouseCallback(GLFWwindow* window, double xPos, double yPos)
 
 void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	scrollDelta = static_cast<float>(yoffset);
+	cameraSpeedMult += static_cast<float>(yoffset);
+	if (cameraSpeedMult <= 0.1f)
+        cameraSpeedMult = 0.1f;
 }
 
 void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx)
 {
-	auto moveIncrement = 2.5f * timeDelta;
+	auto moveIncrement = 2.5f * timeDelta * cameraSpeedMult;
     auto ifPressed = [window](int key)->bool { return glfwGetKey(window, key) == GLFW_PRESS; };
 	
 	if (ifPressed(GLFW_KEY_W))
@@ -94,9 +97,9 @@ void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx)
         openGlCtx.getCamera().moveLR(moveIncrement);
 	if (ifPressed(GLFW_KEY_D))
         openGlCtx.getCamera().moveLR(-moveIncrement);
-	if (ifPressed(GLFW_KEY_R))
+	if (ifPressed(GLFW_KEY_SPACE))
         openGlCtx.getCamera().moveUD(moveIncrement);
-	if (ifPressed(GLFW_KEY_F))
+	if (ifPressed(GLFW_KEY_LEFT_SHIFT))
         openGlCtx.getCamera().moveUD(-moveIncrement);
 }
 
@@ -121,35 +124,48 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
 	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
+	Shader viewVert(".\\res\\shaders\\view.vert", GL_VERTEX_SHADER);
+	Shader viewFrag(".\\res\\shaders\\view.frag", GL_FRAGMENT_SHADER);
 	
 	basicVert.compileShader();
 	basicFrag.compileShader();
 	lightFrag.compileShader();
+	viewVert.compileShader();
+    viewFrag.compileShader();
 
 	ShaderProgram basicShader;
 	basicShader.attachShader(basicVert);
 	basicShader.attachShader(basicFrag);
 	basicShader.makeProgram();
+	
+	// TODO: Move to classes deriving from the LightSource class.
 	basicShader.setUniformVec3("dirLight.direction", dirLightVec);
 	basicShader.setUniformVec3("dirLight.lightColors.diffuse", dirLightCol);
 	basicShader.setUniformVec3("dirLight.lightColors.specular", dirLightCol);
 	basicShader.setUniformVec3("pointLight.position", lightPos);
 	basicShader.setUniformVec3("pointLight.lightColors.diffuse", lightColor);
 	basicShader.setUniformVec3("pointLight.lightColors.specular", lightColor);
+	//
 
     ShaderProgram lightShader;
 	lightShader.attachShader(basicVert);
 	lightShader.attachShader(lightFrag);
 	lightShader.makeProgram();
 
+	ShaderProgram viewShader;
+	viewShader.attachShader(viewVert);
+	viewShader.attachShader(viewFrag);
+	viewShader.makeProgram();
+
     auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
+	auto sp3Ptr = openGlCtx.addShaderProgram(std::move(viewShader));
 	
 	// Load and setup models
 
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
 	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
-	//cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
 	cubeObj.modelMat.scale(glm::vec3(10.0f, 1.0f, 1.0f));
 	auto cubeObj2 = cubeObj;
 	cubeObj2.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
@@ -161,7 +177,7 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	cubeObj5.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
 	auto cubeObj6= cubeObj5;
 	cubeObj6.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
+	//objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj2)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj3)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj4)));
@@ -173,7 +189,8 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	lightCube.modelMat.translate(lightPos);
 	objects.emplace_back(std::make_unique<Model<Mesh<ColVert>>>(std::move(lightCube)));
 
-	
+	DirLight dirLight(glm::vec3(1.0f), glm::vec3(1.0f, 1.0f, 1.0f), *sp3Ptr);
+	objects.emplace_back(std::make_unique<DirLight>(std::move(dirLight)));
 
 	return objects;
 }
@@ -326,7 +343,6 @@ int main(int, char**)
     	    	
         cursorDeltaX = 0;
         cursorDeltaY = 0;
-    	scrollDelta = 0;
     	
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

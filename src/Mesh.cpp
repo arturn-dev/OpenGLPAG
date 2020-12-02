@@ -35,7 +35,6 @@ Mesh<T>::Mesh(Mesh&& other) noexcept
 template <typename T>
 Mesh<T>& Mesh<T>::operator=(Mesh<T> other)
 {
-	//openGLRender = std::move(other.openGLRender);
 	swap(*this, other);
 
 	return *this;
@@ -60,12 +59,6 @@ template <typename T>
 void Mesh<T>::draw(const glm::mat4 modelMat)
 {
 	openGLRender.draw(modelMat);
-}
-
-template <typename T>
-void Mesh<T>::deleteMesh()
-{
-	openGLRender.deleteOpenGlRender();
 }
 
 template <typename T>

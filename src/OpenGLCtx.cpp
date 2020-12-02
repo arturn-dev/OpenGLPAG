@@ -85,21 +85,6 @@ void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot)
 	sceneGraphRoot->draw();
 }
 
-GLuint OpenGLCtx::getAPos() const
-{
-	return aPos;
-}
-
-GLuint OpenGLCtx::getACol() const
-{
-	return aCol;
-}
-
-GLuint OpenGLCtx::getATex() const
-{
-	return aTex;
-}
-
 FPSCamera& OpenGLCtx::getCamera()
 {
 	return camera;
