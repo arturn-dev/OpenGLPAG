@@ -72,13 +72,7 @@ TexMesh AssimpModelLoader<TexMesh>::createMesh(aiMesh* mesh, const aiScene* scen
 		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i], texCoords, vertexColor);
 	}
 	
-	// Populate index collection.
-	for(unsigned int i = 0; i < mesh->mNumFaces; i++)
-    {
-        aiFace face = mesh->mFaces[i];
-        for(unsigned int j = 0; j < face.mNumIndices; j++)
-            indices.push_back(face.mIndices[j]);
-	}
+	populateIndices(mesh, indices);
 
 	if (mesh->mMaterialIndex >= 0)
 	{
@@ -105,15 +99,37 @@ Mesh<ColVert> AssimpModelLoader<Mesh<ColVert>>::createMesh(aiMesh* mesh, const a
 		vertices.emplace_back(mesh->mVertices[i], vertexColor);
 	}
 	
-	// Populate index collection.
+	populateIndices(mesh, indices);
+
+	return Mesh<ColVert>(vertices, indices, shaderProgram);
+}
+
+template <>
+Mesh<PosVert> AssimpModelLoader<Mesh<PosVert>>::createMesh(aiMesh* mesh, const aiScene* scene)
+{
+	std::vector<PosVert> vertices;
+	IndexCollection indices;
+
+	// Populate vertex collection.
+	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+	{
+		vertices.emplace_back(mesh->mVertices[i]);
+	}
+	
+	populateIndices(mesh, indices);
+
+	return Mesh<PosVert>(vertices, indices, shaderProgram);
+}
+
+template <typename T>
+void AssimpModelLoader<T>::populateIndices(aiMesh* mesh, IndexCollection& indices)
+{
 	for(unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];
         for(unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);
 	}
-
-	return Mesh<ColVert>(vertices, indices, shaderProgram);
 }
 
 template <typename T>
@@ -157,4 +173,4 @@ Model<T> AssimpModelLoader<T>::loadModel(const std::string& modelFilename, const
 
 template AssimpModelLoader<TexMesh>;
 template AssimpModelLoader<Mesh<ColVert>>;
-//template AssimpModelLoader<Mesh<TexVert>>;
+template AssimpModelLoader<Mesh<PosVert>>;

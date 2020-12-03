@@ -42,8 +42,6 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//shaderProgram.use();
-
 	float ar = static_cast<float>(windowW) / static_cast<float>(windowH);
 	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 10000.0f);
 	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 10000.0f);
@@ -51,10 +49,46 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	glm::mat4 viewMat = camera.getViewMat();
 	for (auto&& shaderProgram : shaderPrograms)
 	{
+		// Initialize matrices
+		
 		shaderProgram->setUniformMat4("view", viewMat);
 		shaderProgram->setUniformVec3("viewPos", camera.getPosition());
 		shaderProgram->setUniformMat4("proj", projMat);
+
+		// Initialize lights
+		
+		shaderProgram->setUniformVec3("dirLight.direction", dirLight.getDirection());
+		shaderProgram->setUniformVec3("dirLight.lightColors.diffuse", dirLight.getColor());
+		shaderProgram->setUniformVec3("dirLight.lightColors.specular", dirLight.getColor());
+		
+		for (auto&& pointLight : pointLights)
+		{
+			static int i = 0;
+			
+			shaderProgram->setUniformVec3(getNthUniformName("pointLights.position", i), pointLight->modelMat.getTMat()[3]);
+			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.diffuse", i), pointLight->getColor());
+			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.specular", i), pointLight->getColor());
+			
+			i++;
+		}		
+	}	
+}
+
+std::string OpenGLCtx::getNthUniformName(const std::string& uniformName, unsigned i)
+{
+	std::string name = uniformName;
+	
+	auto dotIdx = name.find('.');
+	if (dotIdx != std::string::npos)
+	{
+		name.insert(dotIdx, "[" + std::to_string(i) + "]");
 	}
+	else
+	{
+		name += std::to_string(i);
+	}
+
+	return name;
 }
 
 void OpenGLCtx::render(int windowW, int windowH, 
@@ -85,6 +119,15 @@ void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot)
 	sceneGraphRoot->draw();
 }
 
+void OpenGLCtx::renderLights(int windowW, int windowH)
+{
+	dirLight.draw();
+	for (auto&& pointLight : pointLights)
+	{
+		pointLight->draw();
+	}
+}
+
 FPSCamera& OpenGLCtx::getCamera()
 {
 	return camera;
@@ -103,9 +146,26 @@ const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
 	return (shaderPrograms.end() - 1)->get();
 }
 
+PointLight* OpenGLCtx::addPointLight(PointLight&& pointLight)
+{
+	pointLights.push_back(std::make_unique<PointLight>(std::move(pointLight)));
+
+	return (pointLights.end() - 1)->get();
+}
+
 void OpenGLCtx::setWireframeMode(bool wireframeMode)
 {
 	this->wireframeMode = wireframeMode;
+}
+
+void OpenGLCtx::setDirLight(DirLight&& dirLight)
+{
+	this->dirLight = std::move(dirLight);
+}
+
+DirLight* OpenGLCtx::getDirLight()
+{
+	return &dirLight;
 }
 
 void OpenGLCtx::deleteCtx()

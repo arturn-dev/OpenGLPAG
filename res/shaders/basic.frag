@@ -28,7 +28,8 @@ struct PointLight
 uniform sampler2D texture_diffuse1;
 uniform vec3 viewPos;
 uniform DirLight dirLight;
-uniform PointLight pointLight;
+#define POINT_LIGHTS_COUNT 2
+uniform PointLight pointLights[POINT_LIGHTS_COUNT];
 
 vec3 normN = normalize(norm);
 vec3 viewVec = normalize(viewPos - fragPos);
@@ -108,7 +109,13 @@ void main()
 	vec3 ambientLight = ambientColor * ambientStrength;
 
 	// Lights computation
-	vec3 outputLight = dirLightCalc(dirLight) + pointLightCalc(pointLight);
+	vec3 outputLight = dirLightCalc(dirLight);
+	
+	int i;
+	for(i = 0; i < POINT_LIGHTS_COUNT; i++)
+	{
+		outputLight +=  pointLightCalc(pointLights[i]);
+	}
 
 	// Combine
 	col_out = vec4(ambientLight + outputLight, 1.0f) * (texture(texture_diffuse1, tex) + col);

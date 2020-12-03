@@ -1,31 +1,84 @@
 #pragma once
 
-#include "Object3D.h"
+#include "Model.h"
 #include "OpenGLRender.h"
 
 class LightSource : public Object3D
 {
+	ShaderProgram shaderProgram;
+	std::unique_ptr<Model<Mesh<PosVert>>> model;
+	glm::vec3 color = glm::vec3(0.0f);
 
+	void setupShader();
+
+protected:
+	void attachModel(std::unique_ptr<Model<Mesh<PosVert>>> model);
 	
 public:
-	virtual void draw() = 0;
+	LightSource();
+	LightSource(const glm::vec3& color, ShaderProgram shaderProgram);
+	virtual ~LightSource();
+
+	LightSource(const LightSource& other);
+	LightSource(LightSource&& other) noexcept;
+	LightSource& operator=(LightSource other);
+	friend void swap(LightSource& lhs, LightSource& rhs) noexcept
+	{
+		using std::swap;
+		swap(lhs.modelMat, lhs.modelMat);
+		swap(lhs.shaderProgram, rhs.shaderProgram);
+		swap(lhs.model, rhs.model);
+		swap(lhs.color, rhs.color);
+	}
+
+	Model<Mesh<PosVert>>* getModel();
+	glm::vec3 getColor() const;
+	void setColor(const glm::vec3& color);
+	
+	void draw() override;
 };
 
 class DirLight : public LightSource
 {
-	const glm::vec3 baseVec{1.0f, 0.0f, 0.0f};
-	glm::vec3 direction;
-	glm::vec3 color;
-
-	OpenGLRender openGlRender;
+	glm::vec3 direction = glm::vec3(0.0f);
+	
+	void rotateModelToDirection();
 	
 public:
+	DirLight();
 	DirLight(const glm::vec3& direction, const glm::vec3& color, ShaderProgram shaderProgram);
+	DirLight(const DirLight& other);
+	DirLight(DirLight&& other) noexcept;
+	DirLight& operator=(DirLight other);
+	
+	friend void swap(DirLight& lhs, DirLight& rhs) noexcept
+	{
+		using std::swap;
+		swap(static_cast<LightSource&>(lhs), static_cast<LightSource&>(rhs));
+		swap(lhs.direction, rhs.direction);
+	}
 
 	void draw() override;
 
 	glm::vec3 getDirection() const;
 	void setDirection(const glm::vec3& direction);
-	glm::vec3 getColor() const;
-	void setColor(const glm::vec3& color);
+	
+};
+
+class PointLight : public LightSource
+{
+public:
+	PointLight();
+	PointLight(const glm::vec3& color, ShaderProgram shaderProgram);
+	PointLight(const PointLight& other);
+	PointLight(PointLight&& other) noexcept;
+	PointLight& operator=(PointLight other);
+
+	friend void swap(PointLight& lhs, PointLight& rhs) noexcept
+	{
+		using std::swap;
+		swap(static_cast<LightSource&>(lhs), static_cast<LightSource&>(rhs));
+	}
+
+	void draw() override;
 };

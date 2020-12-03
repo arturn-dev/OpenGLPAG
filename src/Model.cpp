@@ -3,6 +3,11 @@
 #include <utility>
 
 template <typename T>
+Model<T>::Model()
+{
+}
+
+template <typename T>
 Model<T>::Model(std::vector<T> meshes)
 	: Object3D(TMat()), meshes(std::move(meshes))
 {
@@ -55,3 +60,4 @@ template Model<TexMesh>;
 template Model<Mesh<Vertex>>;
 template Model<Mesh<ColVert>>;
 template Model<Mesh<TexVert>>;
+template Model<Mesh<PosVert>>;

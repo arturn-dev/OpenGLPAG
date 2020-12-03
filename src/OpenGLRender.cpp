@@ -135,6 +135,23 @@ void OpenGLRender::setVertexAttribPointers<ColVert>()
 }
 
 template<>
+void OpenGLRender::setVertexAttribPointers<PosVert>()
+{
+	glBindVertexArray(*vao);
+
+	GLuint attribute = shaderProgram.getAttribPos();
+	if (attribute == -1U)
+	{
+		throw std::logic_error("Location of vertex's position attribute is unknown in the shader program.");
+	}
+	glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, sizeof(PosVert), 
+						  reinterpret_cast<const void*>(offsetof(PosVert, pos)));
+	glEnableVertexAttribArray(attribute);
+
+	glBindVertexArray(0);
+}
+
+template<>
 void OpenGLRender::setVertexAttribPointers<TexVert>()
 {
 	glBindVertexArray(*vao);
@@ -305,5 +322,5 @@ template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& v
 template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts, const std::vector<GLuint>& indices);
 template void OpenGLRender::setBufferData<TexVert>(const std::vector<TexVert>& verts);
 template void OpenGLRender::setBufferData<TexVert>(const std::vector<TexVert>& verts, const std::vector<GLuint>& indices);
-
-
+template void OpenGLRender::setBufferData<PosVert>(const std::vector<PosVert>& verts);
+template void OpenGLRender::setBufferData<PosVert>(const std::vector<PosVert>& verts, const std::vector<GLuint>& indices);

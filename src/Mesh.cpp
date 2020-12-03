@@ -70,3 +70,4 @@ const OpenGLRender& Mesh<T>::getOpenGLRender() const
 template Mesh<Vertex>;
 template Mesh<ColVert>;
 template Mesh<TexVert>;
+template Mesh<PosVert>;

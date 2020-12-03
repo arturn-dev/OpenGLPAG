@@ -29,7 +29,6 @@
 
 #include "AssimpModelLoader.h"
 #include "Model.h"
-#include "LightSource.h"
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -114,37 +113,27 @@ void setCameraRotation(OpenGLCtx& openGlCtx)
 std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 {
 	std::vector<std::unique_ptr<Object3D>> objects;
-    glm::vec3 lightColor{1.0f, 0.5f, 0.5f};
-	glm::vec3 lightPos{3.0f, 0.0f, 4.0f};
-	glm::vec3 dirLightVec{0.0f, -0.8f, -1.0f};
-	glm::vec3 dirLightCol{1.0f, 1.0f, 1.0f};
 	
 	// Prepare shaders
 	
 	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
 	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
-	Shader viewVert(".\\res\\shaders\\view.vert", GL_VERTEX_SHADER);
-	Shader viewFrag(".\\res\\shaders\\view.frag", GL_FRAGMENT_SHADER);
+	//Shader viewVert(".\\res\\shaders\\view.vert", GL_VERTEX_SHADER);
+	//Shader viewFrag(".\\res\\shaders\\view.frag", GL_FRAGMENT_SHADER);
 	
 	basicVert.compileShader();
 	basicFrag.compileShader();
 	lightFrag.compileShader();
-	viewVert.compileShader();
-    viewFrag.compileShader();
+	//viewVert.compileShader();
+    //viewFrag.compileShader();
 
 	ShaderProgram basicShader;
 	basicShader.attachShader(basicVert);
 	basicShader.attachShader(basicFrag);
 	basicShader.makeProgram();
 	
-	// TODO: Move to classes deriving from the LightSource class.
-	basicShader.setUniformVec3("dirLight.direction", dirLightVec);
-	basicShader.setUniformVec3("dirLight.lightColors.diffuse", dirLightCol);
-	basicShader.setUniformVec3("dirLight.lightColors.specular", dirLightCol);
-	basicShader.setUniformVec3("pointLight.position", lightPos);
-	basicShader.setUniformVec3("pointLight.lightColors.diffuse", lightColor);
-	basicShader.setUniformVec3("pointLight.lightColors.specular", lightColor);
+	
 	//
 
     ShaderProgram lightShader;
@@ -153,13 +142,13 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	lightShader.makeProgram();
 
 	ShaderProgram viewShader;
-	viewShader.attachShader(viewVert);
-	viewShader.attachShader(viewFrag);
-	viewShader.makeProgram();
+	//viewShader.attachShader(viewVert);
+	//viewShader.attachShader(viewFrag);
+	//viewShader.makeProgram();
 
     auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
-	auto sp3Ptr = openGlCtx.addShaderProgram(std::move(viewShader));
+	//auto sp3Ptr = openGlCtx.addShaderProgram(std::move(viewShader));
 	
 	// Load and setup models
 
@@ -183,14 +172,14 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj4)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj5)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj6)));
-	
-	AssimpModelLoader<Mesh<ColVert>> modelLoader2(".\\res\\models", ".\\res\\textures");
-	Model<Mesh<ColVert>> lightCube = modelLoader2.loadModel("cube.obj", *sp2Ptr, aiColor4D{lightColor.r, lightColor.g, lightColor.b, 1.0f});
-	lightCube.modelMat.translate(lightPos);
-	objects.emplace_back(std::make_unique<Model<Mesh<ColVert>>>(std::move(lightCube)));
 
-	DirLight dirLight(glm::vec3(1.0f), glm::vec3(1.0f, 1.0f, 1.0f), *sp3Ptr);
-	objects.emplace_back(std::make_unique<DirLight>(std::move(dirLight)));
+    // Set lights
+	
+	openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
+	auto pLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 0.5f, 0.5f), *sp2Ptr));
+	pLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
+	pLight = openGlCtx.addPointLight(PointLight(glm::vec3(0.0f, 0.0f, 1.0f), *sp2Ptr));
+	pLight->modelMat.translate(glm::vec3(0.0f, 5.0f, -2.0f));
 
 	return objects;
 }
@@ -340,6 +329,7 @@ int main(int, char**)
 
     	openGlCtx.setWireframeMode(isWireframeMode);
     	openGlCtx.render(display_w, display_h, objects.begin(), objects.end());
+    	openGlCtx.renderLights(display_w, display_h);
     	    	
         cursorDeltaX = 0;
         cursorDeltaY = 0;

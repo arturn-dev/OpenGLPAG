@@ -12,6 +12,7 @@ class Model : public Object3D
 	std::vector<T> meshes;
 
 public:
+	Model();
 	explicit Model(std::vector<T> meshes);
 	Model(const Model<T>& other);
 	Model(Model<T>&& other) noexcept;

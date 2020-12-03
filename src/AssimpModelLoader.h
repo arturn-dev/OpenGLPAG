@@ -17,8 +17,9 @@ class AssimpModelLoader
 
 	std::vector<T> processNode(aiNode* node, const aiScene* scene);
 	T createMesh(aiMesh* mesh, const aiScene* scene);
+	void populateIndices(aiMesh* mesh, IndexCollection& indices);
 	TextureCollection getTexturesOfType(aiMaterial* material, aiTextureType textureType, OpenGLRender::Texture::Type targetTextureType);
-	
+
 public:
 	AssimpModelLoader(const std::string& modelDirPath, const std::string& textureDirPath);
 
