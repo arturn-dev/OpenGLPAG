@@ -25,21 +25,41 @@ struct PointLight
 	LightColors lightColors;
 };
 
+struct SpotLight
+{
+	vec3 position;
+	vec3 direction;
+	float cutOffDeg;
+	LightColors lightColors;
+};
+
 uniform sampler2D texture_diffuse1;
 uniform vec3 viewPos;
 uniform DirLight dirLight;
 #define POINT_LIGHTS_COUNT 2
 uniform PointLight pointLights[POINT_LIGHTS_COUNT];
+#define SPOT_LIGHTS_COUNT 1
+uniform SpotLight spotLights[SPOT_LIGHTS_COUNT];
 
 vec3 normN = normalize(norm);
 vec3 viewVec = normalize(viewPos - fragPos);
 
 const vec3 ambientColor = vec3(1.0f, 1.0f, 1.0f);
 const float ambientStrength = 0.1f;
-const float specularStrength = 0.5f;
+const float specularStrength = 1.0f;
+const float shininness = 32.0f;
 const float pointLightConstant = 1.0f;
 const float pointLightLinear = 0.09f;
 const float pointLightQuadratic = 0.032f;
+const float spotLightInnerAngleDegDiff = 5.0f;
+
+vec3 calcHalfwayVec(vec3 lightPos)
+{
+	vec3 lightVec = normalize(lightPos - fragPos);
+	vec3 halfwayVec = normalize(lightVec + viewVec);
+
+	return halfwayVec;
+}
 
 ///////////////////////////////////////////
 // Directional light calculation functions.
@@ -57,7 +77,7 @@ vec3 dirLight_calcSpecLight(DirLight _dirLight)
 {
 	vec3 lightVec = normalize(-_dirLight.direction);
 	vec3 reflectVec = reflect(-lightVec, normN);
-	vec3 specularLight = pow(max(dot(viewVec, reflectVec), 0.0f), 128) * _dirLight.lightColors.specular * specularStrength;
+	vec3 specularLight = pow(max(dot(viewVec, reflectVec), 0.0f), shininness) * _dirLight.lightColors.specular * specularStrength;
 
 	return specularLight;
 }
@@ -83,9 +103,8 @@ vec3 pointLight_calcDiffLight(PointLight _pointLight)
 
 vec3 pointLight_calcSpecLight(PointLight _pointLight)
 {
-	vec3 lightVec = normalize(_pointLight.position - fragPos);
-	vec3 reflectVec = reflect(-lightVec, normN);
-	vec3 specularLight = pow(max(dot(viewVec, reflectVec), 0.0f), 128) * _pointLight.lightColors.specular * specularStrength;
+	vec3 halfwayVec = calcHalfwayVec(_pointLight.position);
+	vec3 specularLight = pow(max(dot(normN, halfwayVec), 0.0f), shininness) * _pointLight.lightColors.specular * specularStrength;
 
 	return specularLight;
 }
@@ -98,6 +117,43 @@ vec3 pointLightCalc(PointLight _pointLight)
 	vec3 outputLight = pointLight_calcDiffLight(_pointLight) + pointLight_calcSpecLight(_pointLight);
 
 	return outputLight * attenuation;
+}
+
+/////////////////////////////////////
+// Spot light calculation functions.
+/////////////////////////////////////
+
+vec3 spotLight_calcDiffLight(SpotLight _spotLight)
+{
+	vec3 lightVec = normalize(_spotLight.position - fragPos);
+	vec3 diffuseLight = max(dot(normN, lightVec), 0.0f) * _spotLight.lightColors.diffuse;
+
+	return diffuseLight;
+}
+
+vec3 spotLight_calcSpecLight(SpotLight _spotLight)
+{
+	vec3 halfwayVec = calcHalfwayVec(_spotLight.position);
+	vec3 specularLight = pow(max(dot(normN, halfwayVec), 0.0f), shininness) * _spotLight.lightColors.specular * specularStrength;
+
+	return specularLight;
+}
+
+vec3 spotLightCalc(SpotLight _spotLight)
+{
+	vec3 outputLight = vec3(0.0f);
+	vec3 lightVec = normalize(_spotLight.position - fragPos);
+	float lightVecCos = dot(lightVec, normalize(-_spotLight.direction));
+	float cutOffCos = cos(radians(_spotLight.cutOffDeg));
+	if (lightVecCos > cutOffCos)
+	{
+		outputLight += spotLight_calcDiffLight(_spotLight) + spotLight_calcSpecLight(_spotLight);
+	}
+
+	// Calculate intensity
+	float i = clamp((lightVecCos - cutOffCos) / (cos(radians(_spotLight.cutOffDeg - spotLightInnerAngleDegDiff)) - cutOffCos), 0.0f, 1.0f);
+
+	return outputLight * i;
 }
 
 //////////////
@@ -115,6 +171,11 @@ void main()
 	for(i = 0; i < POINT_LIGHTS_COUNT; i++)
 	{
 		outputLight +=  pointLightCalc(pointLights[i]);
+	}
+
+	for(i = 0; i < SPOT_LIGHTS_COUNT; i++)
+	{
+		outputLight += spotLightCalc(spotLights[i]);
 	}
 
 	// Combine

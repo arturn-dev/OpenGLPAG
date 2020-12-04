@@ -158,3 +158,58 @@ void PointLight::draw()
 {
 	LightSource::draw();
 }
+
+SpotLight::SpotLight()
+{
+}
+
+SpotLight::SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram, const glm::vec3& direction,
+                     float cutOffDeg)
+	: LightSource(color, shaderProgram), direction(direction), cutOffDeg(cutOffDeg)
+{
+	AssimpModelLoader<Mesh<PosVert>> modelLoader(".\\res\\models", ".\\res\\textures");
+	auto model = std::make_unique<Model<Mesh<PosVert>>>(modelLoader.loadModel("cube.obj", shaderProgram, aiColor4D{1.0f}));
+	attachModel(std::move(model));
+}
+
+SpotLight::SpotLight(const SpotLight& other)
+	: LightSource(other), direction(other.direction), cutOffDeg(other.cutOffDeg)
+{
+}
+
+SpotLight::SpotLight(SpotLight&& other) noexcept
+{
+	swap(*this, other);
+}
+
+SpotLight& SpotLight::operator=(SpotLight other)
+{
+	swap(*this, other);
+
+	return *this;
+}
+
+void SpotLight::draw()
+{
+	LightSource::draw();
+}
+
+glm::vec3 SpotLight::getDirection() const
+{
+	return direction;
+}
+
+void SpotLight::setDirection(const glm::vec3& direction)
+{
+	this->direction = direction;
+}
+
+float SpotLight::getCutOffDeg() const
+{
+	return cutOffDeg;
+}
+
+void SpotLight::setCutOffDeg(const float cutOffDeg)
+{
+	this->cutOffDeg = cutOffDeg;
+}

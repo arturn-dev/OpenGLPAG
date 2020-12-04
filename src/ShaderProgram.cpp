@@ -84,6 +84,14 @@ GLint ShaderProgram::getUniformLocation(const std::string& name) const
 	return glGetUniformLocation(programID, name.c_str());	
 }
 
+void ShaderProgram::setUniformFloat(const std::string& name, float val) const
+{
+	use();
+	GLint uniformLocation = getUniformLocation(name);
+	if (uniformLocation != 1)
+		glUniform1f(uniformLocation, val);
+}
+
 void ShaderProgram::setUniformVec3(const std::string& name, glm::vec3 vec) const
 {
 	use();

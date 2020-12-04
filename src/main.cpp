@@ -155,6 +155,8 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
 	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
 	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
+	auto floorObj = cubeObj;
+	floorObj.modelMat.scale(glm::vec3(100.0f, 1.0f, 100.0f));
 	cubeObj.modelMat.scale(glm::vec3(10.0f, 1.0f, 1.0f));
 	auto cubeObj2 = cubeObj;
 	cubeObj2.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
@@ -166,20 +168,24 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	cubeObj5.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
 	auto cubeObj6= cubeObj5;
 	cubeObj6.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
+	
 	//objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj2)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj3)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj4)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj5)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj6)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(floorObj)));
 
     // Set lights
 	
-	openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
-	auto pLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 0.5f, 0.5f), *sp2Ptr));
-	pLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
-	pLight = openGlCtx.addPointLight(PointLight(glm::vec3(0.0f, 0.0f, 1.0f), *sp2Ptr));
-	pLight->modelMat.translate(glm::vec3(0.0f, 5.0f, -2.0f));
+	//openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
+	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 0.5f, 0.5f), *sp2Ptr));
+	pointLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
+	pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(0.0f, 0.0f, 1.0f), *sp2Ptr));
+	pointLight->modelMat.translate(glm::vec3(0.0f, 5.0f, -2.0f));
+	auto spotLight = openGlCtx.addSpotLight(SpotLight(glm::vec3(1.0f), *sp2Ptr, glm::vec3(0.0f, -0.8f, 1.0f), 30.0f));
+	spotLight->modelMat.translate(glm::vec3(-6.0f, 2.0f, 4.0f));
 
 	return objects;
 }
@@ -328,9 +334,9 @@ int main(int, char**)
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
     	openGlCtx.setWireframeMode(isWireframeMode);
-    	openGlCtx.render(display_w, display_h, objects.begin(), objects.end());
-    	openGlCtx.renderLights(display_w, display_h);
-    	    	
+        openGlCtx.render(display_w, display_h, objects.begin(), objects.end());
+        openGlCtx.renderLights(display_w, display_h);
+
         cursorDeltaX = 0;
         cursorDeltaY = 0;
     	

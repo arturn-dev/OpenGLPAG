@@ -19,6 +19,7 @@ public:
 	void deleteProgram();
 
 	GLint getUniformLocation(const std::string& name) const;
+	void setUniformFloat(const std::string& name, float val) const;
 	void setUniformVec3(const std::string& name, glm::vec3 vec) const;
 	void setUniformMat4(const std::string& name, glm::mat4 mat) const;
 	

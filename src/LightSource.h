@@ -82,3 +82,32 @@ public:
 
 	void draw() override;
 };
+
+class SpotLight : public LightSource
+{
+	glm::vec3 direction = glm::vec3(0.0f);
+	float cutOffDeg = 0.0f;
+	
+public:
+	SpotLight();
+	SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram, const glm::vec3& direction, float cutOffDeg);
+	SpotLight(const SpotLight& other);
+	SpotLight(SpotLight&& other) noexcept;
+	SpotLight& operator=(SpotLight other);
+
+	friend void swap(SpotLight& lhs, SpotLight& rhs) noexcept
+	{
+		using std::swap;
+		swap(static_cast<LightSource&>(lhs), static_cast<LightSource&>(rhs));
+		swap(lhs.direction, rhs.direction);
+		swap(lhs.cutOffDeg, rhs.cutOffDeg);
+	}
+
+	void draw() override;
+
+
+	glm::vec3 getDirection() const;
+	void setDirection(const glm::vec3& direction);
+	float getCutOffDeg() const;
+	void setCutOffDeg(const float cutOffDeg);
+};

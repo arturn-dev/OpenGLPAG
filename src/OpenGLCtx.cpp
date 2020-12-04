@@ -56,10 +56,13 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 		shaderProgram->setUniformMat4("proj", projMat);
 
 		// Initialize lights
-		
-		shaderProgram->setUniformVec3("dirLight.direction", dirLight.getDirection());
-		shaderProgram->setUniformVec3("dirLight.lightColors.diffuse", dirLight.getColor());
-		shaderProgram->setUniformVec3("dirLight.lightColors.specular", dirLight.getColor());
+
+		if (dirLight != nullptr)
+		{
+			shaderProgram->setUniformVec3("dirLight.direction", dirLight->getDirection());
+			shaderProgram->setUniformVec3("dirLight.lightColors.diffuse", dirLight->getColor());
+			shaderProgram->setUniformVec3("dirLight.lightColors.specular", dirLight->getColor());
+		}		
 		
 		for (auto&& pointLight : pointLights)
 		{
@@ -70,7 +73,20 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.specular", i), pointLight->getColor());
 			
 			i++;
-		}		
+		}
+
+		for (auto&& spotLight : spotLights)
+		{
+			static int i = 0;
+			
+			shaderProgram->setUniformVec3(getNthUniformName("spotLights.position", i), spotLight->modelMat.getTMat()[3]);
+			shaderProgram->setUniformVec3(getNthUniformName("spotLights.direction", i), spotLight->getDirection());
+			shaderProgram->setUniformFloat(getNthUniformName("spotLights.cutOffDeg", i), spotLight->getCutOffDeg());
+			shaderProgram->setUniformVec3(getNthUniformName("spotLights.lightColors.diffuse", i), spotLight->getColor());
+			shaderProgram->setUniformVec3(getNthUniformName("spotLights.lightColors.specular", i), spotLight->getColor());
+
+			i++;
+		}
 	}	
 }
 
@@ -121,10 +137,17 @@ void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot)
 
 void OpenGLCtx::renderLights(int windowW, int windowH)
 {
-	dirLight.draw();
+	if (dirLight != nullptr)
+		dirLight->draw();
+	
 	for (auto&& pointLight : pointLights)
 	{
 		pointLight->draw();
+	}
+
+	for (auto&& spotLight : spotLights)
+	{
+		spotLight->draw();
 	}
 }
 
@@ -153,6 +176,13 @@ PointLight* OpenGLCtx::addPointLight(PointLight&& pointLight)
 	return (pointLights.end() - 1)->get();
 }
 
+SpotLight* OpenGLCtx::addSpotLight(SpotLight&& spotLight)
+{
+	spotLights.push_back(std::make_unique<SpotLight>(std::move(spotLight)));
+
+	return (spotLights.end() - 1)->get();
+}
+
 void OpenGLCtx::setWireframeMode(bool wireframeMode)
 {
 	this->wireframeMode = wireframeMode;
@@ -160,12 +190,12 @@ void OpenGLCtx::setWireframeMode(bool wireframeMode)
 
 void OpenGLCtx::setDirLight(DirLight&& dirLight)
 {
-	this->dirLight = std::move(dirLight);
+	this->dirLight = std::make_unique<DirLight>(std::move(dirLight));
 }
 
 DirLight* OpenGLCtx::getDirLight()
 {
-	return &dirLight;
+	return dirLight.get();
 }
 
 void OpenGLCtx::deleteCtx()
