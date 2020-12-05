@@ -34,6 +34,7 @@ struct SpotLight
 };
 
 uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;
 uniform vec3 viewPos;
 uniform DirLight dirLight;
 #define POINT_LIGHTS_COUNT 2
@@ -43,6 +44,8 @@ uniform SpotLight spotLights[SPOT_LIGHTS_COUNT];
 
 vec3 normN = normalize(norm);
 vec3 viewVec = normalize(viewPos - fragPos);
+vec3 diffuseColor = texture(texture_diffuse1, tex).rgb + col.rgb;
+vec3 specularColor = texture(texture_specular1, tex).rgb + col.rgb;
 
 const vec3 ambientColor = vec3(1.0f, 1.0f, 1.0f);
 const float ambientStrength = 0.1f;
@@ -70,7 +73,7 @@ vec3 dirLight_calcDiffLight(DirLight _dirLight)
 	vec3 lightVec = normalize(-_dirLight.direction);
 	vec3 diffuseLight = max(dot(normN, lightVec), 0.0f) * _dirLight.lightColors.diffuse;
 
-	return diffuseLight;
+	return diffuseLight * diffuseColor;
 }
 
 vec3 dirLight_calcSpecLight(DirLight _dirLight)
@@ -79,7 +82,7 @@ vec3 dirLight_calcSpecLight(DirLight _dirLight)
 	vec3 reflectVec = reflect(-lightVec, normN);
 	vec3 specularLight = pow(max(dot(viewVec, reflectVec), 0.0f), shininness) * _dirLight.lightColors.specular * specularStrength;
 
-	return specularLight;
+	return specularLight * specularColor;
 }
 
 vec3 dirLightCalc(DirLight _dirLight)
@@ -98,7 +101,7 @@ vec3 pointLight_calcDiffLight(PointLight _pointLight)
 	vec3 lightVec = normalize(_pointLight.position - fragPos);
 	vec3 diffuseLight = max(dot(normN, lightVec), 0.0f) * _pointLight.lightColors.diffuse;
 
-	return diffuseLight;
+	return diffuseLight * diffuseColor;
 }
 
 vec3 pointLight_calcSpecLight(PointLight _pointLight)
@@ -106,7 +109,7 @@ vec3 pointLight_calcSpecLight(PointLight _pointLight)
 	vec3 halfwayVec = calcHalfwayVec(_pointLight.position);
 	vec3 specularLight = pow(max(dot(normN, halfwayVec), 0.0f), shininness) * _pointLight.lightColors.specular * specularStrength;
 
-	return specularLight;
+	return specularLight * specularColor;
 }
 
 vec3 pointLightCalc(PointLight _pointLight)
@@ -128,7 +131,7 @@ vec3 spotLight_calcDiffLight(SpotLight _spotLight)
 	vec3 lightVec = normalize(_spotLight.position - fragPos);
 	vec3 diffuseLight = max(dot(normN, lightVec), 0.0f) * _spotLight.lightColors.diffuse;
 
-	return diffuseLight;
+	return diffuseLight * diffuseColor;
 }
 
 vec3 spotLight_calcSpecLight(SpotLight _spotLight)
@@ -136,7 +139,7 @@ vec3 spotLight_calcSpecLight(SpotLight _spotLight)
 	vec3 halfwayVec = calcHalfwayVec(_spotLight.position);
 	vec3 specularLight = pow(max(dot(normN, halfwayVec), 0.0f), shininness) * _spotLight.lightColors.specular * specularStrength;
 
-	return specularLight;
+	return specularLight * specularColor;
 }
 
 vec3 spotLightCalc(SpotLight _spotLight)
@@ -162,7 +165,7 @@ vec3 spotLightCalc(SpotLight _spotLight)
 void main()
 {
 	// Ambient light	
-	vec3 ambientLight = ambientColor * ambientStrength;
+	vec3 ambientLight = diffuseColor * ambientColor * ambientStrength;
 
 	// Lights computation
 	vec3 outputLight = dirLightCalc(dirLight);
@@ -179,5 +182,5 @@ void main()
 	}
 
 	// Combine
-	col_out = vec4(ambientLight + outputLight, 1.0f) * (texture(texture_diffuse1, tex) + col);
+	col_out = vec4(ambientLight + outputLight, 1.0f);
 }

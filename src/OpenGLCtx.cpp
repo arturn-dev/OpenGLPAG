@@ -3,17 +3,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-//void OpenGLCtx::prepareShaders()
-//{
-//  Shader vertexShader(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
-//	Shader fragmentShader(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
-//	vertexShader.compileShader();
-//	fragmentShader.compileShader();
-//
-//  shaderProgram.attachShader(vertexShader);
-//  shaderProgram.attachShader(fragmentShader);
-//	shaderProgram.makeProgram();
-//}
 
 OpenGLCtx::OpenGLCtx()
 	: projMat(glm::mat4(1.0f)), camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f))
@@ -25,9 +14,6 @@ void OpenGLCtx::init()
 {
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
-
-	//viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -10.0f));
-	//viewMat = glm::rotate(viewMat, glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	camera.moveFB(-10.0f);
 }

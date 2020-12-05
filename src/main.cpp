@@ -153,34 +153,20 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	// Load and setup models
 
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
-	Model<TexMesh> cubeObj = modelLoader.loadModel("cube.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
-	cubeObj.getMeshes()[0].addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexDiff, modelLoader.getTexturePath("stone.jpg")});
-	auto floorObj = cubeObj;
-	floorObj.modelMat.scale(glm::vec3(100.0f, 1.0f, 100.0f));
-	cubeObj.modelMat.scale(glm::vec3(10.0f, 1.0f, 1.0f));
-	auto cubeObj2 = cubeObj;
-	cubeObj2.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
-	auto cubeObj3 = cubeObj2;
-	cubeObj3.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
-	auto cubeObj4 = cubeObj3;
-	cubeObj4.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
-	auto cubeObj5= cubeObj4;
-	cubeObj5.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
-	auto cubeObj6= cubeObj5;
-	cubeObj6.modelMat.translate(glm::vec3(0.0f, 3.0f, -3.0f));
+	auto groundObj = modelLoader.loadModel("ground.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
+	auto houseObj = modelLoader.loadModel("domek.obj", *spPtr);
+	houseObj.modelMat.translate(glm::vec3(4.0f, 1.5f, 4.0f));
+	auto roofObj = modelLoader.loadModel("dach.obj", *spPtr);
+	roofObj.modelMat.translate(glm::vec3(4.0f, 3.5f, 4.0f));
 	
-	//objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj2)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj3)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj4)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj5)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(cubeObj6)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(floorObj)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(groundObj)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(houseObj)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(roofObj)));
 
     // Set lights
 	
-	//openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
-	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 0.5f, 0.5f), *sp2Ptr));
+	openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
+	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), *sp2Ptr));
 	pointLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
 	pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(0.0f, 0.0f, 1.0f), *sp2Ptr));
 	pointLight->modelMat.translate(glm::vec3(0.0f, 5.0f, -2.0f));
