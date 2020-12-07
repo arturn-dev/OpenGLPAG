@@ -316,6 +316,16 @@ std::vector<OpenGLRender::Texture> OpenGLRender::getTextures() const
 	return textures;
 }
 
+GLuint OpenGLRender::getVaoId() const
+{
+	return *vao;
+}
+
+ShaderProgram OpenGLRender::getShaderProgram() const
+{
+	return shaderProgram;
+}
+
 template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts);
 template void OpenGLRender::setBufferData<Vertex>(const std::vector<Vertex>& verts, const std::vector<GLuint>& indices);
 template void OpenGLRender::setBufferData<ColVert>(const std::vector<ColVert>& verts);

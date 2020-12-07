@@ -12,6 +12,8 @@ typedef std::vector<OpenGLRender::Texture> TextureCollection;
 template <typename T>
 class Mesh
 {
+	unsigned int elementsCount;
+	
 protected:
 	OpenGLRender openGLRender;
 
@@ -28,11 +30,13 @@ public:
 		using std::swap;
 
 		swap(first.openGLRender, second.openGLRender);
+		swap(first.elementsCount, second.elementsCount);
 	}
 
 	void draw(const glm::mat4);
 
-	const OpenGLRender& getOpenGLRender() const;
+	OpenGLRender& getOpenGLRender();
+	unsigned getElementsCount() const;
 };
 
 class TexMesh : public Mesh<Vertex>

@@ -35,7 +35,7 @@ private:
 	};
 	
 	std::shared_ptr<GLuint> vao, vbo, ebo;
-	std::vector<std::shared_ptr<TextureInfo>> textureInfos; // TODO: Share the textures too.
+	std::vector<std::shared_ptr<TextureInfo>> textureInfos;
 	ShaderProgram shaderProgram;
 	
 	OpenGLRender();
@@ -65,5 +65,7 @@ public:
 	void draw(const glm::mat4 modelMat);
 
 	std::vector<Texture> getTextures() const;
+	GLuint getVaoId() const;
+	ShaderProgram getShaderProgram() const;
 };
 

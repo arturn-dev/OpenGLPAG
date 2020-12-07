@@ -26,7 +26,6 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
 #include "AssimpModelLoader.h"
 #include "Model.h"
 
@@ -110,19 +109,19 @@ void setCameraRotation(OpenGLCtx& openGlCtx)
 	openGlCtx.getCamera().rotate(pitchDeg, yawDeg);
 }
 
-std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
+void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 {
-	std::vector<std::unique_ptr<Object3D>> objects;
-	
 	// Prepare shaders
 	
 	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
+	Shader basicInstVert(".\\res\\shaders\\basic_instanced.vert", GL_VERTEX_SHADER);
 	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
 	//Shader viewVert(".\\res\\shaders\\view.vert", GL_VERTEX_SHADER);
 	//Shader viewFrag(".\\res\\shaders\\view.frag", GL_FRAGMENT_SHADER);
 	
 	basicVert.compileShader();
+	basicInstVert.compileShader();
 	basicFrag.compileShader();
 	lightFrag.compileShader();
 	//viewVert.compileShader();
@@ -132,15 +131,17 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	basicShader.attachShader(basicVert);
 	basicShader.attachShader(basicFrag);
 	basicShader.makeProgram();
-	
-	
-	//
 
     ShaderProgram lightShader;
 	lightShader.attachShader(basicVert);
 	lightShader.attachShader(lightFrag);
 	lightShader.makeProgram();
 
+    ShaderProgram basicInstancedShader;
+	basicInstancedShader.attachShader(basicInstVert);
+	basicInstancedShader.attachShader(basicFrag);
+	basicInstancedShader.makeProgram();
+	
 	ShaderProgram viewShader;
 	//viewShader.attachShader(viewVert);
 	//viewShader.attachShader(viewFrag);
@@ -148,20 +149,44 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 
     auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
+	auto sp3Ptr = openGlCtx.addShaderProgram(std::move(basicInstancedShader));
 	//auto sp3Ptr = openGlCtx.addShaderProgram(std::move(viewShader));
 	
 	// Load and setup models
 
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
 	auto groundObj = modelLoader.loadModel("ground.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
-	auto houseObj = modelLoader.loadModel("domek.obj", *spPtr);
-	houseObj.modelMat.translate(glm::vec3(4.0f, 1.5f, 4.0f));
+	auto houseObj = modelLoader.loadModel("domek.obj", *sp3Ptr);
+
+    std::vector<glm::mat4> iMats;
+	TMat tmpMat;
+	int matsCount = 10;
+	for (int i = 0; i < matsCount; ++i)
+	{
+		tmpMat.translate(glm::vec3(5.0f, 0.0f, 0.0f));
+		iMats.push_back(tmpMat.getTMat());
+	}
+	
+	for (auto&& mesh : houseObj.getMeshes())
+	{
+		auto instancedDraw = std::make_shared<InstancedElementDraw>(mesh.getElementsCount(), iMats.size());
+        instancedDraw->init(mesh.getOpenGLRender().getShaderProgram(), mesh.getOpenGLRender().getVaoId());
+		instancedDraw->setInstancesData(iMats);
+		
+		mesh.getOpenGLRender().drawImpl = instancedDraw;
+	}
+	
+	//houseObj.modelMat.translate(glm::vec3(4.0f, 1.5f, 4.0f));
 	auto roofObj = modelLoader.loadModel("dach.obj", *spPtr);
 	roofObj.modelMat.translate(glm::vec3(4.0f, 3.5f, 4.0f));
 	
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(groundObj)));
+	/*objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(groundObj)));
 	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(houseObj)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(roofObj)));
+	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(roofObj)));*/
+
+	rootNode->attachChildren(NODE_FROM_MODEL(groundObj));
+	rootNode->attachChildren(NODE_FROM_MODEL(houseObj));
+	rootNode->attachChildren(NODE_FROM_MODEL(roofObj));
 
     // Set lights
 	
@@ -172,8 +197,6 @@ std::vector<std::unique_ptr<Object3D>> prepareScene(OpenGLCtx& openGlCtx)
 	pointLight->modelMat.translate(glm::vec3(0.0f, 5.0f, -2.0f));
 	auto spotLight = openGlCtx.addSpotLight(SpotLight(glm::vec3(1.0f), *sp2Ptr, glm::vec3(0.0f, -0.8f, 1.0f), 30.0f));
 	spotLight->modelMat.translate(glm::vec3(-6.0f, 2.0f, 4.0f));
-
-	return objects;
 }
 
 int main(int, char**)
@@ -264,12 +287,12 @@ int main(int, char**)
 	// End of GUI controls settings //
 	
     OpenGLCtx openGlCtx;
-	std::vector<std::unique_ptr<Object3D>> objects;
+	std::unique_ptr<SceneGraphNode> rootNode = std::make_unique<SceneGraphNode>(SceneGraphNode());
 	
 	try
 	{		
 		openGlCtx.init();
-		objects = prepareScene(openGlCtx);
+		prepareScene(openGlCtx, rootNode.get());
 	}
 	catch (std::exception& e)
 	{
@@ -320,7 +343,7 @@ int main(int, char**)
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
     	openGlCtx.setWireframeMode(isWireframeMode);
-        openGlCtx.render(display_w, display_h, objects.begin(), objects.end());
+        openGlCtx.render(display_w, display_h, rootNode.get());
         openGlCtx.renderLights(display_w, display_h);
 
         cursorDeltaX = 0;

@@ -1,6 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <memory>
+
+#include <glm/glm.hpp>
+
+#include "ShaderProgram.h"
 
 class DrawImpl
 {
@@ -14,8 +19,22 @@ class ElementDraw : public DrawImpl
 	
 public:
 	ElementDraw(GLsizei count);
-	~ElementDraw();
 	
+	void draw() override;
+	GLsizei getCount() const;
+};
+
+class InstancedElementDraw : public DrawImpl
+{
+	std::shared_ptr<GLuint> instanceVbo;
+	GLsizei elementsCount;
+	GLsizei instancesCount;
+	
+public:
+	InstancedElementDraw(GLsizei elementsCount, GLsizei instancesCount);
+	
+	void init(ShaderProgram shaderProgram, GLuint vaoId);
+	void setInstancesData(const std::vector<glm::mat4>& instancesMats);
 	void draw() override;
 };
 

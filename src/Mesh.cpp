@@ -3,6 +3,12 @@
 #include "Object3D.h"
 
 template <typename T>
+unsigned Mesh<T>::getElementsCount() const
+{
+	return elementsCount;
+}
+
+template <typename T>
 Mesh<T>::Mesh()
 	: openGLRender(ShaderProgram())
 {
@@ -13,14 +19,15 @@ Mesh<T>::Mesh(std::vector<T> vertices,
 		   IndexCollection indices, 
 	       ShaderProgram shaderProgram)
 	: openGLRender(shaderProgram, 
-				   new ElementDraw(indices.size()))
+				   new ElementDraw(indices.size())),
+	  elementsCount(indices.size())
 {
 	openGLRender.setBufferData(vertices, indices);
 }
 
 template <typename T>
 Mesh<T>::Mesh(const Mesh& other)
-	: openGLRender(other.openGLRender)
+	: openGLRender(other.openGLRender), elementsCount(other.elementsCount)
 {
 	
 }
@@ -62,7 +69,7 @@ void Mesh<T>::draw(const glm::mat4 modelMat)
 }
 
 template <typename T>
-const OpenGLRender& Mesh<T>::getOpenGLRender() const
+OpenGLRender& Mesh<T>::getOpenGLRender()
 {
 	return openGLRender;
 }
