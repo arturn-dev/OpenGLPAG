@@ -8,7 +8,8 @@ class LightSource : public Object3D
 	ShaderProgram shaderProgram;
 	std::unique_ptr<Model<Mesh<PosVert>>> model;
 	glm::vec3 color = glm::vec3(0.0f);
-
+	bool lit = true;
+	
 	void setupShader();
 
 protected:
@@ -34,7 +35,10 @@ public:
 	Model<Mesh<PosVert>>* getModel();
 	glm::vec3 getColor() const;
 	void setColor(const glm::vec3& color);
-	
+	bool isLit() const;
+
+	void turnOff();
+	void turnOn();
 	void draw() override;
 };
 

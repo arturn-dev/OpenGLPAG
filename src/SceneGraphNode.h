@@ -22,14 +22,21 @@ private:
 	std::unique_ptr<Object3D> object;
 	std::vector<std::unique_ptr<SceneGraphNode>> childrens;
 
+	void updateModelMats(TMat parentModelMat, bool dirtyFlag);
 	void draw(TMat parentModelMat, bool dirtyFlag);
 
 public:
 	SceneGraphNode();
 	SceneGraphNode(std::unique_ptr<Object3D> object);
 
+	SceneGraphNode* attachChildren();
 	SceneGraphNode* attachChildren(std::unique_ptr<SceneGraphNode> childNode);
+
+	void updateModelMats();
 	void draw();
+
+	std::vector<std::unique_ptr<SceneGraphNode>>& getChildrens();
+	Object3D* getObject();
 };
 
 template <typename T>

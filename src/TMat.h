@@ -21,22 +21,25 @@ public:
 		return *this;
 	}
 	
-	void translate(glm::vec3 vec)
+	TMat& translate(glm::vec3 vec)
 	{
 		tMat = glm::translate(tMat, vec);
 		dirtyFlag = true;
+		return *this;
 	}
 
-	void rotate(float angleRad, glm::vec3 axis)
+	TMat& rotate(float angleRad, glm::vec3 axis)
 	{
 		tMat = glm::rotate(tMat, angleRad, axis);
 		dirtyFlag = true;
+		return *this;
 	}
 
-	void scale(glm::vec3 vec)
+	TMat& scale(glm::vec3 vec)
 	{
 		tMat = glm::scale(tMat, vec);
 		dirtyFlag = true;
+		return *this;
 	}
 
 	TMat operator*(const TMat& other) const
@@ -44,10 +47,11 @@ public:
 		return tMat * other.tMat;
 	}
 
-	void setTMat(const TMat& tMat)
+	TMat& setTMat(const TMat& tMat)
 	{
 		this->tMat = tMat.tMat;
 		dirtyFlag = true;
+		return *this;
 	}
 	
 	glm::mat4 getTMat() const

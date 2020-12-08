@@ -2,6 +2,21 @@
 
 #include <stdexcept>
 
+void SceneGraphNode::updateModelMats(TMat parentModelMat, bool dirtyFlag)
+{
+	dirtyFlag |= localMat.dirtyFlag;
+	if (dirtyFlag)
+	{
+		object->modelMat.setTMat(parentModelMat * localMat);
+		localMat.dirtyFlag = false;
+	}
+
+	for (auto&& children : childrens)
+	{
+		children->updateModelMats(object->modelMat, dirtyFlag);
+	}
+}
+
 void SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
 {
 	if (object == nullptr)
@@ -16,7 +31,7 @@ void SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
 
 	if (isVisible)
 		object->draw();
-
+	
 	for (auto&& children : childrens)
 	{
 		children->draw(object->modelMat, dirtyFlag);
@@ -33,6 +48,13 @@ SceneGraphNode::SceneGraphNode(std::unique_ptr<Object3D> object)
 {
 }
 
+SceneGraphNode* SceneGraphNode::attachChildren()
+{
+	childrens.emplace_back(std::make_unique<SceneGraphNode>());
+
+	return (childrens.end() - 1)->get();
+}
+
 SceneGraphNode* SceneGraphNode::attachChildren(std::unique_ptr<SceneGraphNode> childNode)
 {
 	childrens.push_back(std::move(childNode));
@@ -40,7 +62,22 @@ SceneGraphNode* SceneGraphNode::attachChildren(std::unique_ptr<SceneGraphNode> c
 	return (childrens.end() - 1)->get();
 }
 
+void SceneGraphNode::updateModelMats()
+{
+	updateModelMats(TMat(), localMat.dirtyFlag);
+}
+
 void SceneGraphNode::draw()
 {
 	draw(TMat(), localMat.dirtyFlag);
+}
+
+std::vector<std::unique_ptr<SceneGraphNode>>& SceneGraphNode::getChildrens()
+{
+	return childrens;
+}
+
+Object3D* SceneGraphNode::getObject()
+{
+	return object.get();
 }

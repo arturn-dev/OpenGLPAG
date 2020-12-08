@@ -45,18 +45,25 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 
 		if (dirLight != nullptr)
 		{
+			glm::vec3 color = dirLight->getColor();
+			if (!dirLight->isLit())
+				color = glm::vec3(0.0f);
 			shaderProgram->setUniformVec3("dirLight.direction", dirLight->getDirection());
-			shaderProgram->setUniformVec3("dirLight.lightColors.diffuse", dirLight->getColor());
-			shaderProgram->setUniformVec3("dirLight.lightColors.specular", dirLight->getColor());
+			shaderProgram->setUniformVec3("dirLight.lightColors.diffuse", color);
+			shaderProgram->setUniformVec3("dirLight.lightColors.specular", color);
 		}		
 		
 		for (auto&& pointLight : pointLights)
 		{
 			static int i = 0;
+
+			glm::vec3 color = pointLight->getColor();
+			if (!pointLight->isLit())
+				color = glm::vec3(0.0f);
 			
 			shaderProgram->setUniformVec3(getNthUniformName("pointLights.position", i), pointLight->modelMat.getTMat()[3]);
-			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.diffuse", i), pointLight->getColor());
-			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.specular", i), pointLight->getColor());
+			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.diffuse", i), color);
+			shaderProgram->setUniformVec3(getNthUniformName("pointLights.lightColors.specular", i), color);
 			
 			i++;
 		}
@@ -64,12 +71,16 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 		for (auto&& spotLight : spotLights)
 		{
 			static int i = 0;
+
+			glm::vec3 color = spotLight->getColor();
+			if (!spotLight->isLit())
+				color = glm::vec3(0.0f);
 			
 			shaderProgram->setUniformVec3(getNthUniformName("spotLights.position", i), spotLight->modelMat.getTMat()[3]);
 			shaderProgram->setUniformVec3(getNthUniformName("spotLights.direction", i), spotLight->getDirection());
 			shaderProgram->setUniformFloat(getNthUniformName("spotLights.cutOffDeg", i), spotLight->getCutOffDeg());
-			shaderProgram->setUniformVec3(getNthUniformName("spotLights.lightColors.diffuse", i), spotLight->getColor());
-			shaderProgram->setUniformVec3(getNthUniformName("spotLights.lightColors.specular", i), spotLight->getColor());
+			shaderProgram->setUniformVec3(getNthUniformName("spotLights.lightColors.diffuse", i), color);
+			shaderProgram->setUniformVec3(getNthUniformName("spotLights.lightColors.specular", i), color);
 
 			i++;
 		}

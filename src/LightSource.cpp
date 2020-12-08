@@ -50,6 +50,21 @@ void LightSource::setColor(const glm::vec3& color)
 	this->color = color;
 }
 
+bool LightSource::isLit() const
+{
+	return lit;
+}
+
+void LightSource::turnOff()
+{
+	lit = false;
+}
+
+void LightSource::turnOn()
+{
+	lit = true;
+}
+
 void LightSource::draw()
 {
 	if (model != nullptr)
@@ -62,7 +77,13 @@ void LightSource::draw()
 
 void LightSource::setupShader()
 {
-	shaderProgram.setUniformVec3("lightColor", color);
+	glm::vec3 lightColor = color;
+	if(!lit)
+	{
+		lightColor = color * glm::vec3(0.2f);
+	}
+	
+	shaderProgram.setUniformVec3("lightColor", lightColor);
 }
 
 void LightSource::attachModel(std::unique_ptr<Model<Mesh<PosVert>>> model)

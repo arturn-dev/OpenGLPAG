@@ -109,7 +109,24 @@ void setCameraRotation(OpenGLCtx& openGlCtx)
 	openGlCtx.getCamera().rotate(pitchDeg, yawDeg);
 }
 
-void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
+template <typename T>
+std::vector<InstancedElementDraw*> prepareInstancedRendering(Model<T>& model, GLsizei instancesCount)
+{
+	std::vector<InstancedElementDraw*> drawImpls;
+	
+	for (auto&& mesh : model.getMeshes())
+	{
+		std::shared_ptr<InstancedElementDraw> instancedDraw = std::make_shared<InstancedElementDraw>(mesh.getElementsCount(), instancesCount);
+        instancedDraw->init(mesh.getOpenGLRender().getShaderProgram(), mesh.getOpenGLRender().getVaoId());
+		
+		mesh.getOpenGLRender().drawImpl = instancedDraw;
+		drawImpls.push_back(instancedDraw.get());
+	}
+
+	return drawImpls;
+}
+
+void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode, std::vector<SceneGraphNode*>& instancedObjectsRootNodes)
 {
 	// Prepare shaders
 	
@@ -157,46 +174,96 @@ void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", ".\\res\\textures");
 	auto groundObj = modelLoader.loadModel("ground.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
 	auto houseObj = modelLoader.loadModel("domek.obj", *sp3Ptr);
+	auto roofObj = modelLoader.loadModel("dach.obj", *sp3Ptr);
 
+	const int housesInRowCount = 200;
+	const int housesInColCount = 200;
+	const float housesSpacing = 4.0f;
+	
     std::vector<glm::mat4> iMats;
-	TMat tmpMat;
-	int matsCount = 10;
-	for (int i = 0; i < matsCount; ++i)
+	for (int i = 0; i < housesInRowCount; ++i)
 	{
-		tmpMat.translate(glm::vec3(5.0f, 0.0f, 0.0f));
-		iMats.push_back(tmpMat.getTMat());
+		for (int j = 0; j < housesInColCount; ++j)
+		{
+			TMat mat;
+			mat.translate(glm::vec3(i * housesSpacing, 0.0f, j * housesSpacing));
+			iMats.push_back(mat.getTMat());
+		}
 	}
 	
-	for (auto&& mesh : houseObj.getMeshes())
-	{
-		auto instancedDraw = std::make_shared<InstancedElementDraw>(mesh.getElementsCount(), iMats.size());
-        instancedDraw->init(mesh.getOpenGLRender().getShaderProgram(), mesh.getOpenGLRender().getVaoId());
-		instancedDraw->setInstancesData(iMats);
-		
-		mesh.getOpenGLRender().drawImpl = instancedDraw;
-	}
+	auto houseDrawImpls = prepareInstancedRendering(houseObj, housesInColCount * housesInRowCount);
+	auto roofDrawImpls = prepareInstancedRendering(roofObj, housesInColCount * housesInRowCount);
 	
-	//houseObj.modelMat.translate(glm::vec3(4.0f, 1.5f, 4.0f));
-	auto roofObj = modelLoader.loadModel("dach.obj", *spPtr);
-	roofObj.modelMat.translate(glm::vec3(4.0f, 3.5f, 4.0f));
-	
-	/*objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(groundObj)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(houseObj)));
-	objects.emplace_back(std::make_unique<Model<TexMesh>>(std::move(roofObj)));*/
-
 	rootNode->attachChildren(NODE_FROM_MODEL(groundObj));
-	rootNode->attachChildren(NODE_FROM_MODEL(houseObj));
-	rootNode->attachChildren(NODE_FROM_MODEL(roofObj));
+	auto* housesRootNode = rootNode->attachChildren();
+	housesRootNode->localMat.translate(glm::vec3(-1000.0f, 0.0f, -1000.0f));
+	housesRootNode->attachChildren(NODE_FROM_MODEL(houseObj))
+				  ->attachChildren(NODE_FROM_MODEL(roofObj));
 
+	std::vector<SceneGraphNode*> houseNodes;
+	std::vector<SceneGraphNode*> roofNodes;
+	
+	for (auto&& iMat : iMats)
+	{
+		static bool firstIt = true;
+
+		SceneGraphNode* houseNode;
+		SceneGraphNode* roofNode;
+
+		if (firstIt)
+		{
+			houseNode = housesRootNode->getChildrens()[0].get();
+			roofNode = houseNode->getChildrens()[0].get();
+
+			firstIt = false;
+		}
+		else
+		{
+			houseNode = housesRootNode->attachChildren();
+			roofNode = houseNode->attachChildren();
+		}
+		
+		houseNode->localMat.setTMat(iMat);
+		roofNode->localMat.setTMat(TMat().translate(glm::vec3(0.0f, 2.0f, 0.0f)));
+
+		houseNodes.push_back(houseNode);
+		roofNodes.push_back(roofNode);
+	}
+
+	rootNode->updateModelMats();
+	
+	std::vector<glm::mat4> houseIMats;
+	for (auto&& houseNode : houseNodes)
+	{
+		houseIMats.push_back(houseNode->getObject()->modelMat.getTMat());
+	}
+	
+	for (auto&& drawImpl : houseDrawImpls)
+	{
+		drawImpl->setInstancesData(houseIMats);
+	}
+
+	std::vector<glm::mat4> roofIMats;
+	for (auto&& roofNode : roofNodes)
+	{
+		roofIMats.push_back(roofNode->getObject()->modelMat.getTMat());
+	}
+
+	for (auto&& drawImpl : roofDrawImpls)
+	{
+		drawImpl->setInstancesData(roofIMats);
+	}
+	
     // Set lights
 	
 	openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
+	openGlCtx.getDirLight()->turnOff();
 	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), *sp2Ptr));
 	pointLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
-	pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(0.0f, 0.0f, 1.0f), *sp2Ptr));
-	pointLight->modelMat.translate(glm::vec3(0.0f, 5.0f, -2.0f));
 	auto spotLight = openGlCtx.addSpotLight(SpotLight(glm::vec3(1.0f), *sp2Ptr, glm::vec3(0.0f, -0.8f, 1.0f), 30.0f));
 	spotLight->modelMat.translate(glm::vec3(-6.0f, 2.0f, 4.0f));
+
+	
 }
 
 int main(int, char**)
@@ -288,11 +355,12 @@ int main(int, char**)
 	
     OpenGLCtx openGlCtx;
 	std::unique_ptr<SceneGraphNode> rootNode = std::make_unique<SceneGraphNode>(SceneGraphNode());
+	std::vector<SceneGraphNode*> instancedObjectsRootNodes;
 	
 	try
 	{		
 		openGlCtx.init();
-		prepareScene(openGlCtx, rootNode.get());
+		prepareScene(openGlCtx, rootNode.get(), instancedObjectsRootNodes);
 	}
 	catch (std::exception& e)
 	{
