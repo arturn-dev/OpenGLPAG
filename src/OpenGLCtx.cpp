@@ -125,11 +125,11 @@ void OpenGLCtx::render(int windowW, int windowH, Object3D* object)
 	object->draw();
 }
 
-void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot)
+void OpenGLCtx::render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot, bool& wasDirty)
 {
 	renderInit(windowW, windowH);
 
-	sceneGraphRoot->draw();
+	wasDirty = sceneGraphRoot->draw();
 }
 
 void OpenGLCtx::renderLights(int windowW, int windowH)

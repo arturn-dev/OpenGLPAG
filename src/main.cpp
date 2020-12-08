@@ -126,7 +126,30 @@ std::vector<InstancedElementDraw*> prepareInstancedRendering(Model<T>& model, GL
 	return drawImpls;
 }
 
-void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode, std::vector<SceneGraphNode*>& instancedObjectsRootNodes)
+struct InstancedSceneGraphNodes
+{
+	std::vector<SceneGraphNode*> nodes;
+	std::vector<InstancedElementDraw*> drawImpls;
+};
+
+void updateInstancedNodes(std::vector<InstancedSceneGraphNodes>& instancedSceneGraphNodes)
+{
+	for (auto&& instancedNodes : instancedSceneGraphNodes)
+	{
+		std::vector<glm::mat4> iMats;
+		for (auto&& node: instancedNodes.nodes)
+		{
+			iMats.push_back(node->getObject()->modelMat.getTMat());
+		}
+		
+		for (auto&& drawImpl : instancedNodes.drawImpls)
+		{
+			drawImpl->setInstancesData(iMats);
+		}
+	}
+}
+
+std::vector<InstancedSceneGraphNodes> prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 {
 	// Prepare shaders
 	
@@ -196,7 +219,7 @@ void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode, std::vector<Sc
 	
 	rootNode->attachChildren(NODE_FROM_MODEL(groundObj));
 	auto* housesRootNode = rootNode->attachChildren();
-	housesRootNode->localMat.translate(glm::vec3(-1000.0f, 0.0f, -1000.0f));
+	housesRootNode->localMat.translate(glm::vec3(-990.0f, 0.0f, -990.0f));
 	housesRootNode->attachChildren(NODE_FROM_MODEL(houseObj))
 				  ->attachChildren(NODE_FROM_MODEL(roofObj));
 
@@ -231,39 +254,20 @@ void prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode, std::vector<Sc
 	}
 
 	rootNode->updateModelMats();
-	
-	std::vector<glm::mat4> houseIMats;
-	for (auto&& houseNode : houseNodes)
-	{
-		houseIMats.push_back(houseNode->getObject()->modelMat.getTMat());
-	}
-	
-	for (auto&& drawImpl : houseDrawImpls)
-	{
-		drawImpl->setInstancesData(houseIMats);
-	}
 
-	std::vector<glm::mat4> roofIMats;
-	for (auto&& roofNode : roofNodes)
-	{
-		roofIMats.push_back(roofNode->getObject()->modelMat.getTMat());
-	}
-
-	for (auto&& drawImpl : roofDrawImpls)
-	{
-		drawImpl->setInstancesData(roofIMats);
-	}
+	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
+	instancedSceneGraphNodes.push_back({std::move(houseNodes), std::move(houseDrawImpls)});
+	instancedSceneGraphNodes.push_back({std::move(roofNodes), std::move(roofDrawImpls)});
 	
     // Set lights
 	
 	openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
-	openGlCtx.getDirLight()->turnOff();
-	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), *sp2Ptr));
+	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 0.0f, 1.0f), *sp2Ptr));
 	pointLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
 	auto spotLight = openGlCtx.addSpotLight(SpotLight(glm::vec3(1.0f), *sp2Ptr, glm::vec3(0.0f, -0.8f, 1.0f), 30.0f));
 	spotLight->modelMat.translate(glm::vec3(-6.0f, 2.0f, 4.0f));
 
-	
+	return instancedSceneGraphNodes;
 }
 
 int main(int, char**)
@@ -355,12 +359,13 @@ int main(int, char**)
 	
     OpenGLCtx openGlCtx;
 	std::unique_ptr<SceneGraphNode> rootNode = std::make_unique<SceneGraphNode>(SceneGraphNode());
-	std::vector<SceneGraphNode*> instancedObjectsRootNodes;
+	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
+	bool sceneGraphWasDirty = true;
 	
 	try
 	{		
 		openGlCtx.init();
-		prepareScene(openGlCtx, rootNode.get(), instancedObjectsRootNodes);
+		instancedSceneGraphNodes = prepareScene(openGlCtx, rootNode.get());
 	}
 	catch (std::exception& e)
 	{
@@ -387,6 +392,13 @@ int main(int, char**)
     	timeDelta = static_cast<float>(timeCurrentFrame - timeLastFrame);
     	timeLastFrame = timeCurrentFrame;
 
+		if (sceneGraphWasDirty)
+		{
+			updateInstancedNodes(instancedSceneGraphNodes);
+		}
+
+		instancedSceneGraphNodes[0].nodes[0]->localMat.translate(glm::vec3(0.0f, 0.01f, 0.0f));
+    	
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -411,7 +423,7 @@ int main(int, char**)
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
     	openGlCtx.setWireframeMode(isWireframeMode);
-        openGlCtx.render(display_w, display_h, rootNode.get());
+        openGlCtx.render(display_w, display_h, rootNode.get(), sceneGraphWasDirty);
         openGlCtx.renderLights(display_w, display_h);
 
         cursorDeltaX = 0;

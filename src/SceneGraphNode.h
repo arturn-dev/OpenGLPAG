@@ -23,7 +23,7 @@ private:
 	std::vector<std::unique_ptr<SceneGraphNode>> childrens;
 
 	void updateModelMats(TMat parentModelMat, bool dirtyFlag);
-	void draw(TMat parentModelMat, bool dirtyFlag);
+	bool draw(TMat parentModelMat, bool dirtyFlag);
 
 public:
 	SceneGraphNode();
@@ -33,7 +33,7 @@ public:
 	SceneGraphNode* attachChildren(std::unique_ptr<SceneGraphNode> childNode);
 
 	void updateModelMats();
-	void draw();
+	bool draw();
 
 	std::vector<std::unique_ptr<SceneGraphNode>>& getChildrens();
 	Object3D* getObject();

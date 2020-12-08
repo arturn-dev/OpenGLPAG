@@ -45,7 +45,7 @@ void InstancedElementDraw::init(ShaderProgram shaderProgram, GLuint vaoId)
 void InstancedElementDraw::setInstancesData(const std::vector<glm::mat4>& instancesMats)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, *instanceVbo);
-	glBufferData(GL_ARRAY_BUFFER, instancesMats.size() * sizeof(glm::mat4), instancesMats.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, instancesMats.size() * sizeof(glm::mat4), instancesMats.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

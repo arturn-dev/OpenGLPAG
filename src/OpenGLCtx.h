@@ -38,7 +38,7 @@ public:
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsStartIt,
 				const std::vector<std::unique_ptr<Object3D>>::iterator objectsEndIt);
 	void render(int windowW, int windowH, Object3D* object);
-	void render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot);
+	void render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot, bool& wasDirty);
 	void renderLights(int windowW, int windowH);
 
 	GLuint getAPos() const;

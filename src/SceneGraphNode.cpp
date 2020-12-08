@@ -17,7 +17,7 @@ void SceneGraphNode::updateModelMats(TMat parentModelMat, bool dirtyFlag)
 	}
 }
 
-void SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
+bool SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
 {
 	if (object == nullptr)
 		throw std::logic_error("Object bound to the scene graph's node can't be nullptr");
@@ -31,11 +31,14 @@ void SceneGraphNode::draw(TMat parentModelMat, bool dirtyFlag)
 
 	if (isVisible)
 		object->draw();
-	
+
+	bool wasDirty = dirtyFlag;	
 	for (auto&& children : childrens)
 	{
-		children->draw(object->modelMat, dirtyFlag);
+		wasDirty |= children->draw(object->modelMat, dirtyFlag);
 	}
+
+	return wasDirty;
 }
 
 SceneGraphNode::SceneGraphNode()
@@ -67,9 +70,9 @@ void SceneGraphNode::updateModelMats()
 	updateModelMats(TMat(), localMat.dirtyFlag);
 }
 
-void SceneGraphNode::draw()
+bool SceneGraphNode::draw()
 {
-	draw(TMat(), localMat.dirtyFlag);
+	return draw(TMat(), localMat.dirtyFlag);
 }
 
 std::vector<std::unique_ptr<SceneGraphNode>>& SceneGraphNode::getChildrens()
