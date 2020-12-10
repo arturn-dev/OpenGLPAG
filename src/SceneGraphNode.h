@@ -40,7 +40,7 @@ public:
 };
 
 template <typename T>
-constexpr auto NODE_FROM_MODEL(T& object3D)
+constexpr auto NODE_FROM_MODEL(const T& object3D)
 {
 	return std::make_unique<SceneGraphNode>(std::make_unique<T>(std::move(object3D)));
 }

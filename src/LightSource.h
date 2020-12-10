@@ -6,13 +6,16 @@
 class LightSource : public Object3D
 {
 	ShaderProgram shaderProgram;
-	std::unique_ptr<Model<Mesh<PosVert>>> model;
+	
 	glm::vec3 color = glm::vec3(0.0f);
 	bool lit = true;
+	bool objectVisible = true;
 	
 	void setupShader();
 
 protected:
+	std::unique_ptr<Model<Mesh<PosVert>>> model;
+	
 	void attachModel(std::unique_ptr<Model<Mesh<PosVert>>> model);
 	
 public:
@@ -37,20 +40,20 @@ public:
 	void setColor(const glm::vec3& color);
 	bool isLit() const;
 
-	void turnOff();
-	void turnOn();
+	void changeState(bool lit, bool objectVisible);
+	void changeLitStatus(bool lit);
+	void changeObjectVisibility(bool visible);
 	void draw() override;
 };
 
 class DirLight : public LightSource
 {
-	glm::vec3 direction = glm::vec3(0.0f);
-	
-	void rotateModelToDirection();
+	const glm::vec3 baseDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::mat4 rotationMat = glm::mat4(1.0f);
 	
 public:
 	DirLight();
-	DirLight(const glm::vec3& direction, const glm::vec3& color, ShaderProgram shaderProgram);
+	DirLight(const glm::vec3& color, ShaderProgram shaderProgram);
 	DirLight(const DirLight& other);
 	DirLight(DirLight&& other) noexcept;
 	DirLight& operator=(DirLight other);
@@ -59,14 +62,12 @@ public:
 	{
 		using std::swap;
 		swap(static_cast<LightSource&>(lhs), static_cast<LightSource&>(rhs));
-		swap(lhs.direction, rhs.direction);
 	}
 
 	void draw() override;
 
-	glm::vec3 getDirection() const;
 	void setDirection(const glm::vec3& direction);
-	
+	glm::vec3 getDirection() const;
 };
 
 class PointLight : public LightSource
@@ -89,12 +90,13 @@ public:
 
 class SpotLight : public LightSource
 {
-	glm::vec3 direction = glm::vec3(0.0f);
+	const glm::vec3 baseDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::mat4 rotationMat = glm::mat4(1.0f);
 	float cutOffDeg = 0.0f;
 	
 public:
 	SpotLight();
-	SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram, const glm::vec3& direction, float cutOffDeg);
+	SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram, float cutOffDeg);
 	SpotLight(const SpotLight& other);
 	SpotLight(SpotLight&& other) noexcept;
 	SpotLight& operator=(SpotLight other);
@@ -103,15 +105,14 @@ public:
 	{
 		using std::swap;
 		swap(static_cast<LightSource&>(lhs), static_cast<LightSource&>(rhs));
-		swap(lhs.direction, rhs.direction);
 		swap(lhs.cutOffDeg, rhs.cutOffDeg);
 	}
 
 	void draw() override;
 
 
-	glm::vec3 getDirection() const;
 	void setDirection(const glm::vec3& direction);
+	glm::vec3 getDirection() const;
 	float getCutOffDeg() const;
 	void setCutOffDeg(const float cutOffDeg);
 };

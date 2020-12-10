@@ -37,10 +37,10 @@ uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
 uniform vec3 viewPos;
 uniform DirLight dirLight;
-#define POINT_LIGHTS_COUNT 2
-uniform PointLight pointLights[POINT_LIGHTS_COUNT];
-#define SPOT_LIGHTS_COUNT 1
-uniform SpotLight spotLights[SPOT_LIGHTS_COUNT];
+#define MAX_POINT_LIGHTS_COUNT 10
+uniform PointLight pointLights[MAX_POINT_LIGHTS_COUNT];
+#define MAX_SPOT_LIGHTS_COUNT 10
+uniform SpotLight spotLights[MAX_SPOT_LIGHTS_COUNT];
 
 vec3 normN = normalize(norm);
 vec3 viewVec = normalize(viewPos - fragPos);
@@ -48,7 +48,7 @@ vec3 diffuseColor = texture(texture_diffuse1, tex).rgb + col.rgb;
 vec3 specularColor = texture(texture_specular1, tex).rgb + col.rgb;
 
 const vec3 ambientColor = vec3(1.0f, 1.0f, 1.0f);
-const float ambientStrength = 0.1f;
+const float ambientStrength = 0.5f;
 const float specularStrength = 1.0f;
 const float shininness = 32.0f;
 const float pointLightConstant = 1.0f;
@@ -156,7 +156,11 @@ vec3 spotLightCalc(SpotLight _spotLight)
 	// Calculate intensity
 	float i = clamp((lightVecCos - cutOffCos) / (cos(radians(_spotLight.cutOffDeg - spotLightInnerAngleDegDiff)) - cutOffCos), 0.0f, 1.0f);
 
-	return outputLight * i;
+	// Calculate attenuation
+	float d = distance(_spotLight.position, fragPos);
+	float attenuation = 1.0f / (pointLightConstant + pointLightLinear * d + pointLightQuadratic * d * d);
+
+	return outputLight * i * attenuation;
 }
 
 //////////////
@@ -171,12 +175,12 @@ void main()
 	vec3 outputLight = dirLightCalc(dirLight);
 	
 	int i;
-	for(i = 0; i < POINT_LIGHTS_COUNT; i++)
+	for(i = 0; i < MAX_POINT_LIGHTS_COUNT; i++)
 	{
 		outputLight +=  pointLightCalc(pointLights[i]);
 	}
 
-	for(i = 0; i < SPOT_LIGHTS_COUNT; i++)
+	for(i = 0; i < MAX_SPOT_LIGHTS_COUNT; i++)
 	{
 		outputLight += spotLightCalc(spotLights[i]);
 	}

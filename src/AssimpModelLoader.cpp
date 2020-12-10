@@ -60,20 +60,8 @@ TexMesh AssimpModelLoader<TexMesh>::createMesh(aiMesh* mesh, const aiScene* scen
 	IndexCollection indices;
 	TextureCollection textures;
 
-	// Populate vertex collection.
-	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
-	{
-		aiVector2D texCoords;
-		if (mesh->mTextureCoords[0])
-		{
-			texCoords = aiVector2D(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-		}
-
-		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i], texCoords, vertexColor);
-	}
+	aiColor4D materialColor = this->vertexColor;
 	
-	populateIndices(mesh, indices);
-
 	if (mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -82,8 +70,25 @@ TexMesh AssimpModelLoader<TexMesh>::createMesh(aiMesh* mesh, const aiScene* scen
 		textures.insert(textures.end(), ret.begin(), ret.end());
 		ret = getTexturesOfType(material, aiTextureType_SPECULAR, OpenGLRender::Texture::TexSpec);
 		textures.insert(textures.end(), ret.begin(), ret.end());
+
+		if (textures.empty() && !overwriteColor)
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, materialColor);
 	}
 
+	// Populate vertex collection.
+	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+	{
+		aiVector2D texCoords;
+		if (mesh->mTextureCoords[0])
+		{
+			texCoords = aiVector2D(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+		}
+		
+		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i], texCoords, materialColor);
+	}
+	
+	populateIndices(mesh, indices);
+	
 	return TexMesh(vertices, indices, shaderProgram, textures);
 }
 
@@ -93,10 +98,20 @@ Mesh<ColVert> AssimpModelLoader<Mesh<ColVert>>::createMesh(aiMesh* mesh, const a
 	std::vector<ColVert> vertices;
 	IndexCollection indices;
 
+	aiColor4D materialColor = this->vertexColor;
+	
+	if (mesh->mMaterialIndex >= 0)
+	{
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		
+		if (!overwriteColor)
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, materialColor);
+	}
+	
 	// Populate vertex collection.
 	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
 	{
-		vertices.emplace_back(mesh->mVertices[i], vertexColor);
+		vertices.emplace_back(mesh->mVertices[i], materialColor);
 	}
 	
 	populateIndices(mesh, indices);
@@ -157,6 +172,11 @@ AssimpModelLoader<T>::AssimpModelLoader(const std::string& modelDirPath, const s
 template <typename T>
 Model<T> AssimpModelLoader<T>::loadModel(const std::string& modelFilename, const ShaderProgram& shaderProgram, aiColor4D col)
 {
+	if (col == aiColor4D{0.0f})
+		overwriteColor = false;
+	else
+		overwriteColor = true;
+	
 	vertexColor = col;
 	this->shaderProgram = shaderProgram;
 		

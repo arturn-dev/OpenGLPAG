@@ -52,11 +52,10 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 			shaderProgram->setUniformVec3("dirLight.lightColors.diffuse", color);
 			shaderProgram->setUniformVec3("dirLight.lightColors.specular", color);
 		}		
-		
+
+		int i = 0;
 		for (auto&& pointLight : pointLights)
 		{
-			static int i = 0;
-
 			glm::vec3 color = pointLight->getColor();
 			if (!pointLight->isLit())
 				color = glm::vec3(0.0f);
@@ -68,10 +67,9 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 			i++;
 		}
 
+		i = 0;
 		for (auto&& spotLight : spotLights)
 		{
-			static int i = 0;
-
 			glm::vec3 color = spotLight->getColor();
 			if (!spotLight->isLit())
 				color = glm::vec3(0.0f);
@@ -166,18 +164,19 @@ const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
 	return (shaderPrograms.end() - 1)->get();
 }
 
-PointLight* OpenGLCtx::addPointLight(PointLight&& pointLight)
+void OpenGLCtx::addPointLight(PointLight* pointLight)
 {
-	pointLights.push_back(std::make_unique<PointLight>(std::move(pointLight)));
-
-	return (pointLights.end() - 1)->get();
+	pointLights.push_back(pointLight);
 }
 
-SpotLight* OpenGLCtx::addSpotLight(SpotLight&& spotLight)
+void OpenGLCtx::addSpotLight(SpotLight* spotLight)
 {
-	spotLights.push_back(std::make_unique<SpotLight>(std::move(spotLight)));
+	spotLights.push_back(spotLight);
+}
 
-	return (spotLights.end() - 1)->get();
+void OpenGLCtx::setDirLight(DirLight* dirLight)
+{
+	this->dirLight = dirLight;
 }
 
 void OpenGLCtx::setWireframeMode(bool wireframeMode)
@@ -185,14 +184,19 @@ void OpenGLCtx::setWireframeMode(bool wireframeMode)
 	this->wireframeMode = wireframeMode;
 }
 
-void OpenGLCtx::setDirLight(DirLight&& dirLight)
-{
-	this->dirLight = std::make_unique<DirLight>(std::move(dirLight));
-}
-
 DirLight* OpenGLCtx::getDirLight()
 {
-	return dirLight.get();
+	return dirLight;
+}
+
+std::vector<PointLight*>& OpenGLCtx::getPointLights()
+{
+	return pointLights;
+}
+
+std::vector<SpotLight*>& OpenGLCtx::getSpotLights()
+{
+	return spotLights;
 }
 
 void OpenGLCtx::deleteCtx()

@@ -55,24 +55,29 @@ bool LightSource::isLit() const
 	return lit;
 }
 
-void LightSource::turnOff()
+void LightSource::changeState(bool lit, bool objectVisible)
 {
-	lit = false;
+	changeLitStatus(lit);
+	changeObjectVisibility(objectVisible);
 }
 
-void LightSource::turnOn()
+void LightSource::changeLitStatus(bool lit)
 {
-	lit = true;
+	this->lit = lit;
+}
+
+void LightSource::changeObjectVisibility(bool visible)
+{
+	objectVisible = visible;
 }
 
 void LightSource::draw()
 {
-	if (model != nullptr)
+	if (model != nullptr && objectVisible)
 	{
-		model->modelMat.setTMat(modelMat);
-		setupShader();		
+		setupShader();
 		model->draw();
-	}
+	}		
 }
 
 void LightSource::setupShader()
@@ -91,22 +96,12 @@ void LightSource::attachModel(std::unique_ptr<Model<Mesh<PosVert>>> model)
 	this->model = std::move(model);
 }
 
-void DirLight::rotateModelToDirection()
-{
-	const glm::vec3 baseVec{0.0f, 0.0f, -1.0f};
-	float angle = glm::acos(glm::dot(baseVec, direction) / glm::length(direction));
-	glm::vec3 rotVec = glm::cross(baseVec, direction);
-	
-	modelMat.setTMat(TMat());
-	modelMat.rotate(angle, rotVec);
-}
-
 DirLight::DirLight()
 {
 }
 
-DirLight::DirLight(const glm::vec3& direction, const glm::vec3& color, ShaderProgram shaderProgram)
-	: LightSource(color, shaderProgram), direction(direction)
+DirLight::DirLight(const glm::vec3& color, ShaderProgram shaderProgram)
+	: LightSource(color, shaderProgram)
 {
 	AssimpModelLoader<Mesh<PosVert>> modelLoader(".\\res\\models", ".\\res\\textures");
 	auto model = std::make_unique<Model<Mesh<PosVert>>>(modelLoader.loadModel("cube.obj", shaderProgram, aiColor4D{1.0f}));
@@ -114,7 +109,7 @@ DirLight::DirLight(const glm::vec3& direction, const glm::vec3& color, ShaderPro
 }
 
 DirLight::DirLight(const DirLight& other)
-	: LightSource(other), direction(other.direction)
+	: LightSource(other)
 {
 }
 
@@ -132,18 +127,36 @@ DirLight& DirLight::operator=(DirLight other)
 
 void DirLight::draw()
 {
-	rotateModelToDirection();
+	model->modelMat = modelMat.getTMat() * rotationMat;
 	LightSource::draw();
-}
-
-glm::vec3 DirLight::getDirection() const
-{
-	return direction;
 }
 
 void DirLight::setDirection(const glm::vec3& direction)
 {
-	this->direction = direction;
+	if (direction == baseDirection)
+	{
+		rotationMat = glm::mat4(1.0f);
+
+		return;
+	}
+
+	if (direction == -baseDirection)
+	{
+		rotationMat = glm::rotate(glm::mat4(1.0f), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f));
+
+		return;
+	}
+	
+	glm::vec3 directionNormalized = glm::normalize(direction);
+	glm::vec3 rotAxis = glm::cross(baseDirection, directionNormalized);
+	float angle = acos(glm::dot(baseDirection, directionNormalized));
+
+	rotationMat = glm::rotate(glm::mat4(1.0f), angle, rotAxis);
+}
+
+glm::vec3 DirLight::getDirection() const
+{
+	return glm::normalize(glm::mat3(model->modelMat.getTMat()) * baseDirection);
 }
 
 PointLight::PointLight()
@@ -177,6 +190,7 @@ PointLight& PointLight::operator=(PointLight other)
 
 void PointLight::draw()
 {
+	model->modelMat = modelMat.getTMat();
 	LightSource::draw();
 }
 
@@ -184,9 +198,8 @@ SpotLight::SpotLight()
 {
 }
 
-SpotLight::SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram, const glm::vec3& direction,
-                     float cutOffDeg)
-	: LightSource(color, shaderProgram), direction(direction), cutOffDeg(cutOffDeg)
+SpotLight::SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram, float cutOffDeg)
+	: LightSource(color, shaderProgram), cutOffDeg(cutOffDeg)
 {
 	AssimpModelLoader<Mesh<PosVert>> modelLoader(".\\res\\models", ".\\res\\textures");
 	auto model = std::make_unique<Model<Mesh<PosVert>>>(modelLoader.loadModel("cube.obj", shaderProgram, aiColor4D{1.0f}));
@@ -194,7 +207,7 @@ SpotLight::SpotLight(const glm::vec3& color, const ShaderProgram& shaderProgram,
 }
 
 SpotLight::SpotLight(const SpotLight& other)
-	: LightSource(other), direction(other.direction), cutOffDeg(other.cutOffDeg)
+	: LightSource(other), cutOffDeg(other.cutOffDeg)
 {
 }
 
@@ -212,17 +225,36 @@ SpotLight& SpotLight::operator=(SpotLight other)
 
 void SpotLight::draw()
 {
+	model->modelMat = modelMat.getTMat() * rotationMat;
 	LightSource::draw();
-}
-
-glm::vec3 SpotLight::getDirection() const
-{
-	return direction;
 }
 
 void SpotLight::setDirection(const glm::vec3& direction)
 {
-	this->direction = direction;
+	if (direction == baseDirection)
+	{
+		rotationMat = glm::mat4(1.0f);
+
+		return;
+	}
+
+	if (direction == -baseDirection)
+	{
+		rotationMat = glm::rotate(glm::mat4(1.0f), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f));
+
+		return;
+	}
+	
+	glm::vec3 directionNormalized = glm::normalize(direction);
+	glm::vec3 rotAxis = glm::cross(baseDirection, directionNormalized);
+	float angle = acos(glm::dot(baseDirection, directionNormalized));
+
+	rotationMat = glm::rotate(glm::mat4(1.0f), angle, rotAxis);
+}
+
+glm::vec3 SpotLight::getDirection() const
+{
+	return glm::normalize(glm::mat3(model->modelMat.getTMat()) * baseDirection);
 }
 
 float SpotLight::getCutOffDeg() const

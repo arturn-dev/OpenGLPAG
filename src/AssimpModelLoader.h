@@ -14,6 +14,7 @@ class AssimpModelLoader
 	std::string textureDirPath;
 	ShaderProgram shaderProgram;
 	aiColor4D vertexColor;
+	bool overwriteColor = false;
 
 	std::vector<T> processNode(aiNode* node, const aiScene* scene);
 	T createMesh(aiMesh* mesh, const aiScene* scene);

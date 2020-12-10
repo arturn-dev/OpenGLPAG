@@ -132,6 +132,15 @@ struct InstancedSceneGraphNodes
 	std::vector<InstancedElementDraw*> drawImpls;
 };
 
+struct SceneData
+{
+	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
+	SceneGraphNode* dirLightNode;
+	SceneGraphNode* pointLightNode;
+	SceneGraphNode* spotLight1Node;
+	SceneGraphNode* spotLight2Node;
+};
+
 void updateInstancedNodes(std::vector<InstancedSceneGraphNodes>& instancedSceneGraphNodes)
 {
 	for (auto&& instancedNodes : instancedSceneGraphNodes)
@@ -149,8 +158,10 @@ void updateInstancedNodes(std::vector<InstancedSceneGraphNodes>& instancedSceneG
 	}
 }
 
-std::vector<InstancedSceneGraphNodes> prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
+SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 {
+	SceneData sceneData;
+	
 	// Prepare shaders
 	
 	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
@@ -198,6 +209,8 @@ std::vector<InstancedSceneGraphNodes> prepareScene(OpenGLCtx& openGlCtx, SceneGr
 	auto groundObj = modelLoader.loadModel("ground.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
 	auto houseObj = modelLoader.loadModel("domek.obj", *sp3Ptr);
 	auto roofObj = modelLoader.loadModel("dach.obj", *sp3Ptr);
+	auto spaceshipObj = modelLoader.loadModel("spaceship.obj", *spPtr);
+	spaceshipObj.modelMat.translate(glm::vec3(10.0f, 2.0f, 0.0f)).rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	const int housesInRowCount = 200;
 	const int housesInColCount = 200;
@@ -218,6 +231,7 @@ std::vector<InstancedSceneGraphNodes> prepareScene(OpenGLCtx& openGlCtx, SceneGr
 	auto roofDrawImpls = prepareInstancedRendering(roofObj, housesInColCount * housesInRowCount);
 	
 	rootNode->attachChildren(NODE_FROM_MODEL(groundObj));
+	auto spaceshipNode = rootNode->attachChildren(NODE_FROM_MODEL(spaceshipObj));
 	auto* housesRootNode = rootNode->attachChildren();
 	housesRootNode->localMat.translate(glm::vec3(-990.0f, 0.0f, -990.0f));
 	housesRootNode->attachChildren(NODE_FROM_MODEL(houseObj))
@@ -253,21 +267,33 @@ std::vector<InstancedSceneGraphNodes> prepareScene(OpenGLCtx& openGlCtx, SceneGr
 		roofNodes.push_back(roofNode);
 	}
 
+	// Set lights
+
+	auto dirLightNode = rootNode->attachChildren(NODE_FROM_MODEL(DirLight(glm::vec3(1.0f), *sp2Ptr)));
+	openGlCtx.setDirLight(dynamic_cast<DirLight*>(dirLightNode->getObject()));
+	auto pointLightNode = rootNode->attachChildren(NODE_FROM_MODEL(PointLight(glm::vec3(1.0f, 0.0f, 1.0f), *sp2Ptr)));
+	openGlCtx.addPointLight(dynamic_cast<PointLight*>(pointLightNode->getObject()));
+	pointLightNode->localMat.translate(glm::vec3(500.0f, 2.0f, 500.0f));
+	auto spotLight1Node = spaceshipNode->attachChildren(NODE_FROM_MODEL(SpotLight(glm::vec3(1.0f), *sp2Ptr, 30.0f)));
+	openGlCtx.addSpotLight(dynamic_cast<SpotLight*>(spotLight1Node->getObject()));
+	spotLight1Node->localMat.translate(glm::vec3(2.0f, -3.0f, 8.0f));
+	auto spotLight2Node = (*(houseNodes.end() - 1))->attachChildren(NODE_FROM_MODEL(SpotLight(glm::vec3(1.0f), *sp2Ptr, 30.0f)));
+	openGlCtx.addSpotLight(dynamic_cast<SpotLight*>(spotLight2Node->getObject()));
+	spotLight2Node->localMat.translate(glm::vec3(2.0f, 3.0f, 5.0f));
+	
 	rootNode->updateModelMats();
 
 	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
 	instancedSceneGraphNodes.push_back({std::move(houseNodes), std::move(houseDrawImpls)});
 	instancedSceneGraphNodes.push_back({std::move(roofNodes), std::move(roofDrawImpls)});
-	
-    // Set lights
-	
-	openGlCtx.setDirLight(DirLight(glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.0f), *sp2Ptr));
-	auto pointLight = openGlCtx.addPointLight(PointLight(glm::vec3(1.0f, 0.0f, 1.0f), *sp2Ptr));
-	pointLight->modelMat.translate(glm::vec3(2.0f, 2.0f, 2.0f));
-	auto spotLight = openGlCtx.addSpotLight(SpotLight(glm::vec3(1.0f), *sp2Ptr, glm::vec3(0.0f, -0.8f, 1.0f), 30.0f));
-	spotLight->modelMat.translate(glm::vec3(-6.0f, 2.0f, 4.0f));
 
-	return instancedSceneGraphNodes;
+	sceneData.instancedSceneGraphNodes = instancedSceneGraphNodes;
+	sceneData.dirLightNode = dirLightNode;
+	sceneData.pointLightNode = pointLightNode;
+	sceneData.spotLight1Node = spotLight1Node;
+	sceneData.spotLight2Node = spotLight2Node;
+	
+	return sceneData;
 }
 
 int main(int, char**)
@@ -354,18 +380,35 @@ int main(int, char**)
 	// GUI controls settings //
 
 	bool isWireframeMode = false;
+	bool dirLightOn = true;
+	bool pointLightOn = true;
+	bool spotLight1On = true;
+	bool spotLight2On = true;
+	bool dirLightObjVisible = true;
+	bool pointLightObjVisible = true;
+	bool spotLight1ObjVisible = true;
+	bool spotLight2ObjVisible = true;
+
+	glm::vec3 dirLightColor = glm::vec3(1.0f);
+	glm::vec3 pointLightColor = glm::vec3(1.0f);
+	glm::vec3 spotLight1Color = glm::vec3(1.0f);
+	glm::vec3 spotLight2Color = glm::vec3(1.0f);
+
+	glm::vec3 dirLightDirection = glm::vec3(1.0f, -1.0f, -1.0f);
+	glm::vec3 spotLight1Direction = glm::vec3(1.0f, -1.0f, -1.0f);
+	glm::vec3 spotLight2Direction = glm::vec3(-1.0f, -1.0f, -1.0f);
 
 	// End of GUI controls settings //
 	
     OpenGLCtx openGlCtx;
 	std::unique_ptr<SceneGraphNode> rootNode = std::make_unique<SceneGraphNode>(SceneGraphNode());
-	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
+	SceneData sceneData;
 	bool sceneGraphWasDirty = true;
 	
 	try
 	{		
 		openGlCtx.init();
-		instancedSceneGraphNodes = prepareScene(openGlCtx, rootNode.get());
+		sceneData = prepareScene(openGlCtx, rootNode.get());
 	}
 	catch (std::exception& e)
 	{
@@ -394,10 +437,18 @@ int main(int, char**)
 
 		if (sceneGraphWasDirty)
 		{
-			updateInstancedNodes(instancedSceneGraphNodes);
+			updateInstancedNodes(sceneData.instancedSceneGraphNodes);
 		}
 
-		instancedSceneGraphNodes[0].nodes[0]->localMat.translate(glm::vec3(0.0f, 0.01f, 0.0f));
+		sceneData.instancedSceneGraphNodes[0].nodes[0]->localMat.translate(glm::vec3(0.0f, 0.01f, 0.0f));
+    	sceneData.pointLightNode->localMat.setTMat(
+			glm::rotate(glm::mat4(1.0f), 0.01f, glm::vec3(0.0f, 1.0f, 0.0f)) * sceneData.pointLightNode->localMat.getTMat()
+		);
+
+		sceneData.dirLightNode->updateModelMats();
+    	sceneData.pointLightNode->updateModelMats();
+    	sceneData.spotLight1Node->updateModelMats();
+    	sceneData.spotLight2Node->updateModelMats();
     	
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -412,17 +463,53 @@ int main(int, char**)
         {
             ImGui::Begin("Solar System");
         	ImGui::Checkbox("Wireframe mode", &isWireframeMode);
+        	
+        	ImGui::Text("Directional light");
+        	ImGui::Checkbox("Enabled", &dirLightOn); ImGui::SameLine(); ImGui::Checkbox("Object visible", &dirLightObjVisible);
+        	ImGui::ColorEdit3("Color", glm::value_ptr(dirLightColor));
+        	ImGui::SliderFloat3("Direction", glm::value_ptr(dirLightDirection), -1.0f, 1.0f);
+        	
+			ImGui::Text("Point light ");
+        	ImGui::Checkbox("Enabled##a", &pointLightOn); ImGui::SameLine(); ImGui::Checkbox("Object visible##a", &pointLightObjVisible);
+        	ImGui::ColorEdit3("Color##a", glm::value_ptr(pointLightColor));
+        	
+			ImGui::Text("1st spot light");
+        	ImGui::Checkbox("Enabled##b", &spotLight1On); ImGui::SameLine(); ImGui::Checkbox("Object visible##b", &spotLight1ObjVisible);
+        	ImGui::ColorEdit3("Color##b", glm::value_ptr(spotLight1Color));
+        	ImGui::SliderFloat3("Direction##b", glm::value_ptr(spotLight1Direction), -1.0f, 1.0f);
+        	
+        	ImGui::Text("2st spot light");
+        	ImGui::Checkbox("Enabled##c", &spotLight2On); ImGui::SameLine(); ImGui::Checkbox("Object visible##c", &spotLight2ObjVisible);
+        	ImGui::ColorEdit3("Color##c", glm::value_ptr(spotLight2Color));
+        	ImGui::SliderFloat3("Direction##c", glm::value_ptr(spotLight2Direction), -1.0f, 1.0f);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
-
+    	
         ImGui::Render();
         int display_w, display_h;
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
 
-    	openGlCtx.setWireframeMode(isWireframeMode);
+    	openGlCtx.setWireframeMode(isWireframeMode);    	
+    	auto dirLight = openGlCtx.getDirLight();
+    	dirLight->changeState(dirLightOn, dirLightObjVisible);
+    	dirLight->setColor(dirLightColor);
+    	dirLight->setDirection(dirLightDirection);
+    	
+        auto pointLight = openGlCtx.getPointLights()[0];
+    	pointLight->changeState(pointLightOn, pointLightObjVisible);
+    	pointLight->setColor(pointLightColor);
+    	
+    	auto spotLights = openGlCtx.getSpotLights();
+    	spotLights[0]->changeState(spotLight1On, spotLight1ObjVisible);
+    	spotLights[0]->setColor(spotLight1Color);
+    	spotLights[0]->setDirection(glm::vec3(-spotLight1Direction.x, -spotLight1Direction.y, spotLight1Direction.z));
+    	spotLights[1]->changeState(spotLight2On, spotLight2ObjVisible);
+    	spotLights[1]->setColor(spotLight2Color);
+    	spotLights[1]->setDirection(spotLight2Direction);
+    	
         openGlCtx.render(display_w, display_h, rootNode.get(), sceneGraphWasDirty);
         openGlCtx.renderLights(display_w, display_h);
 

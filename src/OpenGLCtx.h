@@ -20,9 +20,9 @@ class OpenGLCtx
 	// or pass some structure to the draw() method with information needed for the shaders' uniforms.
 	std::vector<std::unique_ptr<ShaderProgram>> shaderPrograms;
 
-	std::unique_ptr<DirLight> dirLight;
-	std::vector<std::unique_ptr<PointLight>> pointLights;
-	std::vector<std::unique_ptr<SpotLight>> spotLights;
+	DirLight* dirLight;
+	std::vector<PointLight*> pointLights;
+	std::vector<SpotLight*> spotLights;
 	
 	glm::mat4 projMat;
 	bool wireframeMode = false;
@@ -41,17 +41,15 @@ public:
 	void render(int windowW, int windowH, SceneGraphNode* sceneGraphRoot, bool& wasDirty);
 	void renderLights(int windowW, int windowH);
 
-	GLuint getAPos() const;
-	GLuint getACol() const;
-	GLuint getATex() const;
-	FPSCamera& getCamera();
-	
 	const ShaderProgram* addShaderProgram(ShaderProgram&& shaderProgram);
-	PointLight* addPointLight(PointLight&& pointLight);
-	SpotLight* addSpotLight(SpotLight&& spotLight);
+	void addPointLight(PointLight* pointLight);
+	void addSpotLight(SpotLight* spotLight);
+	void setDirLight(DirLight* dirLight);
 	void setWireframeMode(bool wireframeMode);
-	void setDirLight(DirLight&& dirLight);
 	DirLight* getDirLight();
+	std::vector<PointLight*>& getPointLights();
+	std::vector<SpotLight*>& getSpotLights();
+	FPSCamera& getCamera();
 
 	void deleteCtx();
 };
