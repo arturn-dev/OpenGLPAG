@@ -151,16 +151,18 @@ vec3 spotLightCalc(SpotLight _spotLight)
 	if (lightVecCos > cutOffCos)
 	{
 		outputLight += spotLight_calcDiffLight(_spotLight) + spotLight_calcSpecLight(_spotLight);
+
+		// Calculate intensity
+		float i = clamp((lightVecCos - cutOffCos) / (cos(radians(_spotLight.cutOffDeg - spotLightInnerAngleDegDiff)) - cutOffCos), 0.0f, 1.0f);
+
+		// Calculate attenuation
+		float d = distance(_spotLight.position, fragPos);
+		float attenuation = 1.0f / (pointLightConstant + pointLightLinear * d + pointLightQuadratic * d * d);
+
+		outputLight *= i * attenuation;
 	}
 
-	// Calculate intensity
-	float i = clamp((lightVecCos - cutOffCos) / (cos(radians(_spotLight.cutOffDeg - spotLightInnerAngleDegDiff)) - cutOffCos), 0.0f, 1.0f);
-
-	// Calculate attenuation
-	float d = distance(_spotLight.position, fragPos);
-	float attenuation = 1.0f / (pointLightConstant + pointLightLinear * d + pointLightQuadratic * d * d);
-
-	return outputLight * i * attenuation;
+	return outputLight;
 }
 
 //////////////

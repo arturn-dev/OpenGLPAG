@@ -168,15 +168,11 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	Shader basicInstVert(".\\res\\shaders\\basic_instanced.vert", GL_VERTEX_SHADER);
 	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
-	//Shader viewVert(".\\res\\shaders\\view.vert", GL_VERTEX_SHADER);
-	//Shader viewFrag(".\\res\\shaders\\view.frag", GL_FRAGMENT_SHADER);
 	
 	basicVert.compileShader();
 	basicInstVert.compileShader();
 	basicFrag.compileShader();
 	lightFrag.compileShader();
-	//viewVert.compileShader();
-    //viewFrag.compileShader();
 
 	ShaderProgram basicShader;
 	basicShader.attachShader(basicVert);
@@ -192,16 +188,10 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	basicInstancedShader.attachShader(basicInstVert);
 	basicInstancedShader.attachShader(basicFrag);
 	basicInstancedShader.makeProgram();
-	
-	ShaderProgram viewShader;
-	//viewShader.attachShader(viewVert);
-	//viewShader.attachShader(viewFrag);
-	//viewShader.makeProgram();
 
     auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
 	auto sp3Ptr = openGlCtx.addShaderProgram(std::move(basicInstancedShader));
-	//auto sp3Ptr = openGlCtx.addShaderProgram(std::move(viewShader));
 	
 	// Load and setup models
 
@@ -270,6 +260,7 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	// Set lights
 
 	auto dirLightNode = rootNode->attachChildren(NODE_FROM_MODEL(DirLight(glm::vec3(1.0f), *sp2Ptr)));
+	dirLightNode->localMat.translate(glm::vec3(0.0f, 3.0f, 0.0f));
 	openGlCtx.setDirLight(dynamic_cast<DirLight*>(dirLightNode->getObject()));
 	auto pointLightNode = rootNode->attachChildren(NODE_FROM_MODEL(PointLight(glm::vec3(1.0f, 0.0f, 1.0f), *sp2Ptr)));
 	openGlCtx.addPointLight(dynamic_cast<PointLight*>(pointLightNode->getObject()));
@@ -442,7 +433,7 @@ int main(int, char**)
 
 		sceneData.instancedSceneGraphNodes[0].nodes[0]->localMat.translate(glm::vec3(0.0f, 0.01f, 0.0f));
     	sceneData.pointLightNode->localMat.setTMat(
-			glm::rotate(glm::mat4(1.0f), 0.01f, glm::vec3(0.0f, 1.0f, 0.0f)) * sceneData.pointLightNode->localMat.getTMat()
+			glm::rotate(glm::mat4(1.0f), 0.005f, glm::vec3(0.0f, 1.0f, 0.0f)) * sceneData.pointLightNode->localMat.getTMat()
 		);
 
 		sceneData.dirLightNode->updateModelMats();
