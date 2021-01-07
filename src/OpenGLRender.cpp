@@ -5,7 +5,7 @@
 
 #include "AssimpModelLoader.h"
 #include "Vertex.h"
-#include "TextureLoader.h"
+#include "OpenGLTextureLoader.h"
 
 
 OpenGLRender::OpenGLRender(ShaderProgram shaderProgram)
@@ -229,25 +229,42 @@ void OpenGLRender::addTexture(Texture texture)
 		throw std::logic_error("Maximum number of texture units per object reached.");
 	}
 
-	int width, height, channelsCount;
-
-	TextureLoader texLoader;
-	unsigned char* textureData = texLoader.loadTextureFromPath(texture.path, width, height, channelsCount);
-	
+	OpenGLTextureLoader texLoader;
 	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(textureData));
-	glGenerateMipmap(GL_TEXTURE_2D);
+	switch (texture.type)
+	{
+		case Texture::TexDiff:
+		case Texture::TexSpec:
+		{
+			tex = texLoader.generateTexture(texture);
+		}
+		break;
+		case Texture::TexCubemap:
+		{
+			std::list<std::string> texturePaths;
+			texturePaths.push_back(texture.path + "\\right.jpg");
+			texturePaths.push_back(texture.path + "\\left.jpg");
+			texturePaths.push_back(texture.path + "\\top.jpg");
+			texturePaths.push_back(texture.path + "\\bottom.jpg");
+			texturePaths.push_back(texture.path + "\\front.jpg");
+			texturePaths.push_back(texture.path + "\\back.jpg");
+			
+			tex = texLoader.generateCubemap(texturePaths);
+		}
+		break;
+		default:
+			throw std::logic_error("Unknown texture type: " + std::to_string(texture.type));
+	}
 
 	textureInfos.push_back(
 		std::shared_ptr<TextureInfo>(
 			new TextureInfo{tex, texture},
 			[](auto p){ glDeleteTextures(1, &p->id); }));
+}
+
+void OpenGLRender::draw()
+{
+	draw(glm::mat4{1.0f});
 }
 
 void OpenGLRender::draw(const glm::mat4 modelMat)
@@ -264,27 +281,34 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 	auto specularTextureNr = 1;
 	for (auto&& textureInfo : textureInfos)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, textureInfo->id);
-
-		std::string uniformName;
 		switch(textureInfo->texture.type)
 		{
 			case Texture::TexDiff:
 			{
-				uniformName = "texture_diffuse" + std::to_string(diffuseTextureNr++);
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, textureInfo->id);
+				std::string uniformName = "texture_diffuse" + std::to_string(diffuseTextureNr++);
+				glUniform1i(shaderProgram.getUniformLocation(uniformName), i);
+				i++;
 			}
 			break;
 			case Texture::TexSpec:
 			{
-				uniformName = "texture_specular" + std::to_string(specularTextureNr++);
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, textureInfo->id);
+				std::string uniformName = "texture_specular" + std::to_string(specularTextureNr++);
+				glUniform1i(shaderProgram.getUniformLocation(uniformName), i);
+				i++;
+			}
+			break;
+			case Texture::TexCubemap:
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, textureInfo->id);
+				glUniform1i(shaderProgram.getUniformLocation("skybox"), 0);
 			}
 			break;
 		}
-
-		glUniform1i(shaderProgram.getUniformLocation(uniformName), i);
-
-		i++;
 	}
 
 	shaderProgram.setUniformMat4("model", modelMat);
@@ -292,17 +316,29 @@ void OpenGLRender::draw(const glm::mat4 modelMat)
 	
 	glBindVertexArray(*vao);
 	drawImpl->draw();
+	glBindVertexArray(0);
 
 	i = 0;
 	for (auto&& textureInfo : textureInfos)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		i++;
+		switch(textureInfo->texture.type)
+		{
+			case Texture::TexDiff:
+			case Texture::TexSpec:
+			{
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				i++;
+			}
+			break;
+			case Texture::TexCubemap:
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+			}
+			break;
+		}
 	}
-	
-	glBindVertexArray(0);
 }
 
 std::vector<OpenGLRender::Texture> OpenGLRender::getTextures() const

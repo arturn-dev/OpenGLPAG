@@ -19,7 +19,12 @@ public:
 		enum Type
 		{
 			TexDiff,
-			TexSpec
+			TexSpec,
+			
+			// For this texture type, the path below is a path to the folder where
+			// the textures for each side are stored.
+			// Files should be named as follows: back.jpg, front.jpg, etc.
+			TexCubemap 
 		} type;
 
 		std::string path;
@@ -62,6 +67,7 @@ public:
 	void setBufferData(const std::vector<T>& verts, const std::vector<GLuint>& indices);
 	
 	void addTexture(Texture texture);
+	void draw();
 	void draw(const glm::mat4 modelMat);
 
 	std::vector<Texture> getTextures() const;

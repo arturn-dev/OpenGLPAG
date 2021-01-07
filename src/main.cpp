@@ -166,13 +166,17 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	
 	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
 	Shader basicInstVert(".\\res\\shaders\\basic_instanced.vert", GL_VERTEX_SHADER);
+	Shader skyboxVert(".\\res\\shaders\\skybox.vert", GL_VERTEX_SHADER);
 	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
+	Shader skyboxFrag(".\\res\\shaders\\skybox.frag", GL_FRAGMENT_SHADER);
 	
 	basicVert.compileShader();
 	basicInstVert.compileShader();
+	skyboxVert.compileShader();
 	basicFrag.compileShader();
 	lightFrag.compileShader();
+	skyboxFrag.compileShader();
 
 	ShaderProgram basicShader;
 	basicShader.attachShader(basicVert);
@@ -189,6 +193,12 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	basicInstancedShader.attachShader(basicFrag);
 	basicInstancedShader.makeProgram();
 
+	ShaderProgram skyboxShader;
+	skyboxShader.attachShader(skyboxVert);
+	skyboxShader.attachShader(skyboxFrag);
+	skyboxShader.makeProgram();
+	skyboxShader.setAttribPosByName("pos_in");
+	
     auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
 	auto sp3Ptr = openGlCtx.addShaderProgram(std::move(basicInstancedShader));
@@ -283,6 +293,8 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	sceneData.pointLightNode = pointLightNode;
 	sceneData.spotLight1Node = spotLight1Node;
 	sceneData.spotLight2Node = spotLight2Node;
+
+	openGlCtx.setSkybox(".\\res\\textures\\skybox", skyboxShader);
 	
 	return sceneData;
 }
@@ -426,6 +438,9 @@ int main(int, char**)
     	timeDelta = static_cast<float>(timeCurrentFrame - timeLastFrame);
     	timeLastFrame = timeCurrentFrame;
 
+    	// Check if any of the nodes were dirty in the last frame.
+    	// If yes, update instance matrices for instanced objects.
+    	// NOTE: This causes the update (of instance matrices) being late by 1 frame after the actual change of the translation matrices.
 		if (sceneGraphWasDirty)
 		{
 			updateInstancedNodes(sceneData.instancedSceneGraphNodes);

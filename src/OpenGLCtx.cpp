@@ -82,7 +82,14 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 
 			i++;
 		}
-	}	
+	}
+
+	if (skybox != nullptr)
+	{
+		skyboxShaderProgram.setUniformMat4("view", glm::mat3(viewMat));
+		skyboxShaderProgram.setUniformMat4("proj", projMat);
+		skybox->draw();
+	}
 }
 
 std::string OpenGLCtx::getNthUniformName(const std::string& uniformName, unsigned i)
@@ -153,7 +160,6 @@ FPSCamera& OpenGLCtx::getCamera()
 
 const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
 {
-	// TODO: Move setting the attributes to the ShaderProgram class itself.
 	shaderProgram.setAttribPosByName("pos_in");
 	shaderProgram.setAttribColByName("col_in");
 	shaderProgram.setAttribTexByName("tex_in");
@@ -177,6 +183,12 @@ void OpenGLCtx::addSpotLight(SpotLight* spotLight)
 void OpenGLCtx::setDirLight(DirLight* dirLight)
 {
 	this->dirLight = dirLight;
+}
+
+void OpenGLCtx::setSkybox(const std::string& texturesDirPath, ShaderProgram shaderProgram)
+{
+	skybox = std::make_unique<Skybox>(texturesDirPath, shaderProgram);
+	skyboxShaderProgram = shaderProgram;
 }
 
 void OpenGLCtx::setWireframeMode(bool wireframeMode)

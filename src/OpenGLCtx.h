@@ -10,6 +10,7 @@
 #include "SceneGraphNode.h"
 #include "Camera.h"
 #include "LightSource.h"
+#include "Skybox.h"
 
 class OpenGLCtx
 {
@@ -23,6 +24,9 @@ class OpenGLCtx
 	DirLight* dirLight;
 	std::vector<PointLight*> pointLights;
 	std::vector<SpotLight*> spotLights;
+
+	std::unique_ptr<Skybox> skybox;
+	ShaderProgram skyboxShaderProgram;
 	
 	glm::mat4 projMat;
 	bool wireframeMode = false;
@@ -45,6 +49,7 @@ public:
 	void addPointLight(PointLight* pointLight);
 	void addSpotLight(SpotLight* spotLight);
 	void setDirLight(DirLight* dirLight);
+	void setSkybox(const std::string& texturesDirPath, ShaderProgram shaderProgram);
 	void setWireframeMode(bool wireframeMode);
 	DirLight* getDirLight();
 	std::vector<PointLight*>& getPointLights();
