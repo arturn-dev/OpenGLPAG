@@ -28,6 +28,7 @@
 
 #include "AssimpModelLoader.h"
 #include "Model.h"
+#include "Motorbike.h"
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -248,6 +249,8 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 		mesh.getOpenGLRender().addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
 	}
 	rootNode->attachChildren(NODE_FROM_MODEL(refractiveObj));
+
+	rootNode->attachChildren(std::make_unique<MotorbikeNode>(spPtr));
 	
 	const int housesInRowCount = 200;
 	const int housesInColCount = 200;
