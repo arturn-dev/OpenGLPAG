@@ -160,6 +160,8 @@ void updateInstancedNodes(std::vector<InstancedSceneGraphNodes>& instancedSceneG
 
 SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 {
+	const std::string skyboxTexturesDir = ".\\res\\textures\\skybox";
+	
 	SceneData sceneData;
 	
 	// Prepare shaders
@@ -167,16 +169,23 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	Shader basicVert(".\\res\\shaders\\basic.vert", GL_VERTEX_SHADER);
 	Shader basicInstVert(".\\res\\shaders\\basic_instanced.vert", GL_VERTEX_SHADER);
 	Shader skyboxVert(".\\res\\shaders\\skybox.vert", GL_VERTEX_SHADER);
+	Shader reflectiveVert(".\\res\\shaders\\reflective.vert", GL_VERTEX_SHADER);	
 	Shader basicFrag(".\\res\\shaders\\basic.frag", GL_FRAGMENT_SHADER);
 	Shader lightFrag(".\\res\\shaders\\light.frag", GL_FRAGMENT_SHADER);
 	Shader skyboxFrag(".\\res\\shaders\\skybox.frag", GL_FRAGMENT_SHADER);
+	Shader reflectiveFrag(".\\res\\shaders\\reflective.frag", GL_FRAGMENT_SHADER);
+	Shader refractiveFrag(".\\res\\shaders\\refractive.frag", GL_FRAGMENT_SHADER);
+	
 	
 	basicVert.compileShader();
 	basicInstVert.compileShader();
 	skyboxVert.compileShader();
+	reflectiveVert.compileShader();
 	basicFrag.compileShader();
 	lightFrag.compileShader();
 	skyboxFrag.compileShader();
+	reflectiveFrag.compileShader();
+	refractiveFrag.compileShader();
 
 	ShaderProgram basicShader;
 	basicShader.attachShader(basicVert);
@@ -198,10 +207,22 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	skyboxShader.attachShader(skyboxFrag);
 	skyboxShader.makeProgram();
 	skyboxShader.setAttribPosByName("pos_in");
+
+	ShaderProgram reflectiveShader;
+	reflectiveShader.attachShader(reflectiveVert);
+	reflectiveShader.attachShader(reflectiveFrag);
+	reflectiveShader.makeProgram();
+
+	ShaderProgram refractiveShader;
+	refractiveShader.attachShader(reflectiveVert);
+	refractiveShader.attachShader(refractiveFrag);
+	refractiveShader.makeProgram();
 	
     auto spPtr = openGlCtx.addShaderProgram(std::move(basicShader));
 	auto sp2Ptr = openGlCtx.addShaderProgram(std::move(lightShader));
 	auto sp3Ptr = openGlCtx.addShaderProgram(std::move(basicInstancedShader));
+	auto sp4Ptr = openGlCtx.addShaderProgram(std::move(reflectiveShader));
+	auto sp5Ptr = openGlCtx.addShaderProgram(std::move(refractiveShader));
 	
 	// Load and setup models
 
@@ -211,7 +232,23 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	auto roofObj = modelLoader.loadModel("dach.obj", *sp3Ptr);
 	auto spaceshipObj = modelLoader.loadModel("spaceship.obj", *spPtr);
 	spaceshipObj.modelMat.translate(glm::vec3(10.0f, 2.0f, 0.0f)).rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	
+	AssimpModelLoader<Mesh<PosVert>> modelLoader2(".\\res\\models", "");
+	auto reflectiveObj = modelLoader2.loadModel("cube.obj", *sp4Ptr);
+	for (auto&& mesh : reflectiveObj.getMeshes())
+	{
+		mesh.getOpenGLRender().addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
+	}
+	rootNode->attachChildren(NODE_FROM_MODEL(reflectiveObj));
 
+	auto refractiveObj = modelLoader2.loadModel("cube.obj", *sp5Ptr);
+	refractiveObj.modelMat.translate(glm::vec3(0.0f, 10.0f, 0.0f));
+	for (auto&& mesh : refractiveObj.getMeshes())
+	{
+		mesh.getOpenGLRender().addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
+	}
+	rootNode->attachChildren(NODE_FROM_MODEL(refractiveObj));
+	
 	const int housesInRowCount = 200;
 	const int housesInColCount = 200;
 	const float housesSpacing = 4.0f;
@@ -294,7 +331,7 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	sceneData.spotLight1Node = spotLight1Node;
 	sceneData.spotLight2Node = spotLight2Node;
 
-	openGlCtx.setSkybox(".\\res\\textures\\skybox", skyboxShader);
+	openGlCtx.setSkybox(skyboxTexturesDir, skyboxShader);
 	
 	return sceneData;
 }

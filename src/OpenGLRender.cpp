@@ -148,6 +148,14 @@ void OpenGLRender::setVertexAttribPointers<PosVert>()
 						  reinterpret_cast<const void*>(offsetof(PosVert, pos)));
 	glEnableVertexAttribArray(attribute);
 
+	attribute = shaderProgram.getAttribNorm();
+	if (attribute != -1U)
+	{
+		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_TRUE, sizeof(PosVert), 
+						  reinterpret_cast<const void*>(offsetof(PosVert, normal)));
+		glEnableVertexAttribArray(attribute);
+	}
+	
 	glBindVertexArray(0);
 }
 

@@ -128,7 +128,7 @@ Mesh<PosVert> AssimpModelLoader<Mesh<PosVert>>::createMesh(aiMesh* mesh, const a
 	// Populate vertex collection.
 	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
 	{
-		vertices.emplace_back(mesh->mVertices[i]);
+		vertices.emplace_back(mesh->mVertices[i], mesh->mNormals[i]);
 	}
 	
 	populateIndices(mesh, indices);

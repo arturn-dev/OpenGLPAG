@@ -23,9 +23,11 @@ struct Vertex
 struct PosVert
 {
 	glm::vec3 pos;
+	glm::vec3 normal;
 
-	PosVert(aiVector3D pos)
-		: pos(*reinterpret_cast<glm::vec3*>(&pos))
+	PosVert(aiVector3D pos, aiVector3D norm = aiVector3D{0.0f})
+		: pos(*reinterpret_cast<glm::vec3*>(&pos)),
+		  normal(*reinterpret_cast<glm::vec3*>(&norm))
 	{}
 };
 
