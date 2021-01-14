@@ -37,6 +37,7 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 bool init = true;
+bool freeCamera = true;
 
 const float mouseSensitivity = 0.1f;
 const float scrollSensitivity = 6.0f;
@@ -83,23 +84,44 @@ void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
         cameraSpeedMult = 0.1f;
 }
 
-void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx)
+void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_F5 && action == GLFW_PRESS)
+		freeCamera ^= 1;
+}
+
+void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx, MotorbikeNode* motorbikeNode)
 {
 	auto moveIncrement = 2.5f * timeDelta * cameraSpeedMult;
     auto ifPressed = [window](int key)->bool { return glfwGetKey(window, key) == GLFW_PRESS; };
+
+	if (freeCamera)
+	{
+		if (ifPressed(GLFW_KEY_W))
+			openGlCtx.getCamera().moveFB(moveIncrement);
+		if (ifPressed(GLFW_KEY_S))
+	        openGlCtx.getCamera().moveFB(-moveIncrement);
+		if (ifPressed(GLFW_KEY_A))
+	        openGlCtx.getCamera().moveLR(moveIncrement);
+		if (ifPressed(GLFW_KEY_D))
+	        openGlCtx.getCamera().moveLR(-moveIncrement);
+		if (ifPressed(GLFW_KEY_SPACE))
+	        openGlCtx.getCamera().moveUD(moveIncrement);
+		if (ifPressed(GLFW_KEY_LEFT_SHIFT))
+	        openGlCtx.getCamera().moveUD(-moveIncrement);
+	}
+	else
+	{
+		if (ifPressed(GLFW_KEY_W))
+			motorbikeNode->accelerate();
+		if (ifPressed(GLFW_KEY_S))
+	        motorbikeNode->applyBreaks();
+		if (ifPressed(GLFW_KEY_A))
+	        motorbikeNode->turnLeft();
+		if (ifPressed(GLFW_KEY_D))
+	        motorbikeNode->turnRight();
+	}
 	
-	if (ifPressed(GLFW_KEY_W))
-        openGlCtx.getCamera().moveFB(moveIncrement);
-	if (ifPressed(GLFW_KEY_S))
-        openGlCtx.getCamera().moveFB(-moveIncrement);
-	if (ifPressed(GLFW_KEY_A))
-        openGlCtx.getCamera().moveLR(moveIncrement);
-	if (ifPressed(GLFW_KEY_D))
-        openGlCtx.getCamera().moveLR(-moveIncrement);
-	if (ifPressed(GLFW_KEY_SPACE))
-        openGlCtx.getCamera().moveUD(moveIncrement);
-	if (ifPressed(GLFW_KEY_LEFT_SHIFT))
-        openGlCtx.getCamera().moveUD(-moveIncrement);
 }
 
 void setCameraRotation(OpenGLCtx& openGlCtx)
@@ -140,6 +162,7 @@ struct SceneData
 	SceneGraphNode* pointLightNode;
 	SceneGraphNode* spotLight1Node;
 	SceneGraphNode* spotLight2Node;
+	MotorbikeNode* motorbikeNode;
 };
 
 void updateInstancedNodes(std::vector<InstancedSceneGraphNodes>& instancedSceneGraphNodes)
@@ -250,7 +273,9 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	}
 	rootNode->attachChildren(NODE_FROM_MODEL(refractiveObj));
 
-	rootNode->attachChildren(std::make_unique<MotorbikeNode>(spPtr));
+	auto motorbikeNode = rootNode->attachChildren(std::make_unique<MotorbikeNode>(spPtr));
+	motorbikeNode->localMat.translate(glm::vec3(0.0f, 2.24782f, 0.0f));
+	sceneData.motorbikeNode = dynamic_cast<MotorbikeNode*>(motorbikeNode);
 	
 	const int housesInRowCount = 200;
 	const int housesInColCount = 200;
@@ -444,7 +469,7 @@ int main(int, char**)
 	// End of GUI controls settings //
 	
     OpenGLCtx openGlCtx;
-	std::unique_ptr<SceneGraphNode> rootNode = std::make_unique<SceneGraphNode>(SceneGraphNode());
+	std::unique_ptr<SceneGraphNode> rootNode = std::make_unique<SceneGraphNode>();
 	SceneData sceneData;
 	bool sceneGraphWasDirty = true;
 	
@@ -460,6 +485,7 @@ int main(int, char**)
 	}
 		
 	glfwSetScrollCallback(window, mouseScrollCallback);
+	glfwSetKeyCallback(window, keyboardCallback);
 	
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -471,7 +497,7 @@ int main(int, char**)
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
     	
-    	processKbInput(window, openGlCtx);
+    	processKbInput(window, openGlCtx, sceneData.motorbikeNode);
     	setCameraRotation(openGlCtx);
 
     	auto timeCurrentFrame = glfwGetTime();
@@ -555,6 +581,8 @@ int main(int, char**)
     	spotLights[1]->changeState(spotLight2On, spotLight2ObjVisible);
     	spotLights[1]->setColor(spotLight2Color);
     	spotLights[1]->setDirection(spotLight2Direction);
+
+    	sceneData.motorbikeNode->animate();
     	
         openGlCtx.render(display_w, display_h, rootNode.get(), sceneGraphWasDirty);
         openGlCtx.renderLights(display_w, display_h);

@@ -28,6 +28,7 @@ private:
 public:
 	SceneGraphNode();
 	SceneGraphNode(std::unique_ptr<Object3D> object);
+	virtual ~SceneGraphNode() = default;
 
 	SceneGraphNode* attachChildren();
 	SceneGraphNode* attachChildren(std::unique_ptr<SceneGraphNode> childNode);
