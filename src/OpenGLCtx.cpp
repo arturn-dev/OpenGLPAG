@@ -5,7 +5,7 @@
 
 
 OpenGLCtx::OpenGLCtx()
-	: projMat(glm::mat4(1.0f)), camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+	: projMat(glm::mat4(1.0f))
 {	
 	
 }
@@ -13,9 +13,9 @@ OpenGLCtx::OpenGLCtx()
 void OpenGLCtx::init()
 {
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
-	camera.moveFB(-10.0f);
+	//camera.moveFB(-10.0f);
 }
 
 void OpenGLCtx::renderInit(int windowW, int windowH)
@@ -32,13 +32,13 @@ void OpenGLCtx::renderInit(int windowW, int windowH)
 	projMat = glm::perspective(glm::radians(45.0f), ar, 0.01f, 10000.0f);
 	//projMat = glm::ortho(-ar, ar, -1.0f, 1.0f, 0.01f, 10000.0f);
 
-	glm::mat4 viewMat = camera.getViewMat();
+	glm::mat4 viewMat = camera->getViewMat();
 	for (auto&& shaderProgram : shaderPrograms)
 	{
 		// Initialize matrices
 		
 		shaderProgram->setUniformMat4("view", viewMat);
-		shaderProgram->setUniformVec3("viewPos", camera.getPosition());
+		shaderProgram->setUniformVec3("viewPos", camera->getPosition());
 		shaderProgram->setUniformMat4("proj", projMat);
 
 		// Initialize lights
@@ -153,11 +153,6 @@ void OpenGLCtx::renderLights(int windowW, int windowH)
 	}
 }
 
-FPSCamera& OpenGLCtx::getCamera()
-{
-	return camera;
-}
-
 const ShaderProgram* OpenGLCtx::addShaderProgram(ShaderProgram&& shaderProgram)
 {
 	shaderProgram.setAttribPosByName("pos_in");
@@ -178,6 +173,11 @@ void OpenGLCtx::addPointLight(PointLight* pointLight)
 void OpenGLCtx::addSpotLight(SpotLight* spotLight)
 {
 	spotLights.push_back(spotLight);
+}
+
+void OpenGLCtx::setCamera(Camera* camera)
+{
+	this->camera = camera;
 }
 
 void OpenGLCtx::setDirLight(DirLight* dirLight)

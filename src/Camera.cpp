@@ -2,14 +2,40 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+Camera::Camera()
+	: position(0.0f), center(0.0f), up(0.0f, 1.0f, 0.0f)
+{
+	
+}
+
 Camera::Camera(const glm::vec3& position, const glm::vec3& center, const glm::vec3& up)
 	: position(position), center(center), up(up)
 {
 }
 
+void Camera::setPosition(const glm::vec3& position)
+{
+	this->position = position;
+}
+
+void Camera::setCenter(const glm::vec3& center)
+{
+	this->center = center;
+}
+
 glm::vec3 Camera::getPosition() const
 {
 	return position;
+}
+
+glm::mat4 Camera::getViewMat() const
+{
+	return glm::lookAt(position, center, up);
+}
+
+FPSCamera::FPSCamera()
+	: Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+{
 }
 
 FPSCamera::FPSCamera(const glm::vec3& position, const glm::vec3& center, const glm::vec3& up)

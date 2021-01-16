@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "SceneGraphNode.h"
 
 class ShaderProgram;
@@ -22,7 +24,7 @@ class MotorbikeNode : public SceneGraphNode
 	const float acceleration = 0.05f;
 	const float deceleration = 0.005f;
 	const float breakSpeed = 0.1f;
-	const float maxSpeed = 1.0f;
+	const float maxSpeed = 4.0f;
 	const float maxFrontWheelAngleDeg = 70.0f;
 	const float frontWheelAngleDegIncrement = 2.0f;
 	const float wheelsSpan = 4.97231f;
@@ -33,7 +35,7 @@ class MotorbikeNode : public SceneGraphNode
 	glm::vec3 direction;
 
 public:
-	MotorbikeNode(const ShaderProgram* shaderProgram);
+	MotorbikeNode(const ShaderProgram* mainShader, const ShaderProgram* reflectiveShader, const ShaderProgram* refractiveShader, const std::string& skyboxTexturesDir);
 	~MotorbikeNode() = default;
 
 	void accelerate();
@@ -43,4 +45,7 @@ public:
 	void turnRight();
 
 	void animate();
+
+
+	glm::vec3 getDirection() const;
 };

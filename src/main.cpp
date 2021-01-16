@@ -50,6 +50,24 @@ float cameraSpeedMult = 1.0f;
 float timeDelta = 0.0;
 double timeLastFrame = 0.0;
 
+struct InstancedSceneGraphNodes
+{
+	std::vector<SceneGraphNode*> nodes;
+	std::vector<InstancedElementDraw*> drawImpls;
+};
+
+struct SceneData
+{
+	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
+	Camera followCamera;
+	FPSCamera fpsCamera;
+	SceneGraphNode* dirLightNode;
+	SceneGraphNode* pointLightNode;
+	SceneGraphNode* spotLight1Node;
+	SceneGraphNode* spotLight2Node;
+	MotorbikeNode* motorbikeNode;
+};
+
 void mouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
 	const auto xPosf = static_cast<float>(xPos);
@@ -90,7 +108,7 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 		freeCamera ^= 1;
 }
 
-void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx, MotorbikeNode* motorbikeNode)
+void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx, SceneData& sceneData)
 {
 	auto moveIncrement = 2.5f * timeDelta * cameraSpeedMult;
     auto ifPressed = [window](int key)->bool { return glfwGetKey(window, key) == GLFW_PRESS; };
@@ -98,38 +116,48 @@ void processKbInput(GLFWwindow* window, OpenGLCtx& openGlCtx, MotorbikeNode* mot
 	if (freeCamera)
 	{
 		if (ifPressed(GLFW_KEY_W))
-			openGlCtx.getCamera().moveFB(moveIncrement);
+			sceneData.fpsCamera.moveFB(moveIncrement);
 		if (ifPressed(GLFW_KEY_S))
-	        openGlCtx.getCamera().moveFB(-moveIncrement);
+	        sceneData.fpsCamera.moveFB(-moveIncrement);
 		if (ifPressed(GLFW_KEY_A))
-	        openGlCtx.getCamera().moveLR(moveIncrement);
+	        sceneData.fpsCamera.moveLR(moveIncrement);
 		if (ifPressed(GLFW_KEY_D))
-	        openGlCtx.getCamera().moveLR(-moveIncrement);
+	        sceneData.fpsCamera.moveLR(-moveIncrement);
 		if (ifPressed(GLFW_KEY_SPACE))
-	        openGlCtx.getCamera().moveUD(moveIncrement);
+	        sceneData.fpsCamera.moveUD(moveIncrement);
 		if (ifPressed(GLFW_KEY_LEFT_SHIFT))
-	        openGlCtx.getCamera().moveUD(-moveIncrement);
+	        sceneData.fpsCamera.moveUD(-moveIncrement);
 	}
 	else
 	{
 		if (ifPressed(GLFW_KEY_W))
-			motorbikeNode->accelerate();
+			sceneData.motorbikeNode->accelerate();
 		if (ifPressed(GLFW_KEY_S))
-	        motorbikeNode->applyBreaks();
+	        sceneData.motorbikeNode->applyBreaks();
 		if (ifPressed(GLFW_KEY_A))
-	        motorbikeNode->turnLeft();
+	        sceneData.motorbikeNode->turnLeft();
 		if (ifPressed(GLFW_KEY_D))
-	        motorbikeNode->turnRight();
+	        sceneData.motorbikeNode->turnRight();
 	}
 	
 }
 
-void setCameraRotation(OpenGLCtx& openGlCtx)
+void setupCamera(OpenGLCtx& openGlCtx, SceneData& sceneData)
 {
-	float pitchDeg = -cursorDeltaY * mouseSensitivity;
-	float yawDeg = cursorDeltaX * mouseSensitivity;
-
-	openGlCtx.getCamera().rotate(pitchDeg, yawDeg);
+	if (freeCamera)
+	{
+		openGlCtx.setCamera(&sceneData.fpsCamera);
+		float pitchDeg = -cursorDeltaY * mouseSensitivity;
+		float yawDeg = cursorDeltaX * mouseSensitivity;
+		sceneData.fpsCamera.rotate(pitchDeg, yawDeg);
+	}
+	else
+	{
+		openGlCtx.setCamera(&sceneData.followCamera);
+		glm::vec3 motorbikePos = sceneData.motorbikeNode->getObject()->modelMat.getTMat()[3];
+		sceneData.followCamera.setCenter(motorbikePos + glm::vec3(0.0f, 3.0f, 0.0f));
+    	sceneData.followCamera.setPosition(motorbikePos + sceneData.motorbikeNode->getDirection() * -8.0f + glm::vec3(0.0f, 5.0f, 0.0f));
+	}
 }
 
 template <typename T>
@@ -148,22 +176,6 @@ std::vector<InstancedElementDraw*> prepareInstancedRendering(Model<T>& model, GL
 
 	return drawImpls;
 }
-
-struct InstancedSceneGraphNodes
-{
-	std::vector<SceneGraphNode*> nodes;
-	std::vector<InstancedElementDraw*> drawImpls;
-};
-
-struct SceneData
-{
-	std::vector<InstancedSceneGraphNodes> instancedSceneGraphNodes;
-	SceneGraphNode* dirLightNode;
-	SceneGraphNode* pointLightNode;
-	SceneGraphNode* spotLight1Node;
-	SceneGraphNode* spotLight2Node;
-	MotorbikeNode* motorbikeNode;
-};
 
 void updateInstancedNodes(std::vector<InstancedSceneGraphNodes>& instancedSceneGraphNodes)
 {
@@ -273,7 +285,7 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	}
 	rootNode->attachChildren(NODE_FROM_MODEL(refractiveObj));
 
-	auto motorbikeNode = rootNode->attachChildren(std::make_unique<MotorbikeNode>(spPtr));
+	auto motorbikeNode = rootNode->attachChildren(std::make_unique<MotorbikeNode>(spPtr, sp4Ptr, sp5Ptr, skyboxTexturesDir));
 	motorbikeNode->localMat.translate(glm::vec3(0.0f, 2.24782f, 0.0f));
 	sceneData.motorbikeNode = dynamic_cast<MotorbikeNode*>(motorbikeNode);
 	
@@ -360,7 +372,7 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	sceneData.spotLight2Node = spotLight2Node;
 
 	openGlCtx.setSkybox(skyboxTexturesDir, skyboxShader);
-	
+
 	return sceneData;
 }
 
@@ -497,8 +509,7 @@ int main(int, char**)
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
     	
-    	processKbInput(window, openGlCtx, sceneData.motorbikeNode);
-    	setCameraRotation(openGlCtx);
+    	processKbInput(window, openGlCtx, sceneData);
 
     	auto timeCurrentFrame = glfwGetTime();
     	timeDelta = static_cast<float>(timeCurrentFrame - timeLastFrame);
@@ -583,6 +594,8 @@ int main(int, char**)
     	spotLights[1]->setDirection(spotLight2Direction);
 
     	sceneData.motorbikeNode->animate();
+
+    	setupCamera(openGlCtx, sceneData);
     	
         openGlCtx.render(display_w, display_h, rootNode.get(), sceneGraphWasDirty);
         openGlCtx.renderLights(display_w, display_h);

@@ -1,16 +1,30 @@
 #include "Motorbike.h"
 #include "AssimpModelLoader.h"
 
-MotorbikeNode::MotorbikeNode(const ShaderProgram* shaderProgram)
+MotorbikeNode::MotorbikeNode(const ShaderProgram* mainShader, const ShaderProgram* reflectiveShader, const ShaderProgram* refractiveShader, const std::string& skyboxTexturesDir)
 {
 	AssimpModelLoader<TexMesh> modelLoader(".\\res\\models", "");
-	auto motorBody = modelLoader.loadModel("motor_body.obj", *shaderProgram);
-	auto motorHandleBar = modelLoader.loadModel("motor_handle_bar.obj", *shaderProgram);
-	auto motorWindshield= modelLoader.loadModel("motor_windshield.obj", *shaderProgram);
-	auto motorFrontWheel= modelLoader.loadModel("motor_front_wheel.obj", *shaderProgram);
-	auto motorBackWheel= modelLoader.loadModel("motor_back_wheel.obj", *shaderProgram);
-	auto motorLeftMirror= modelLoader.loadModel("motor_left_mirror.obj", *shaderProgram);
-	auto motorRightMirror= modelLoader.loadModel("motor_right_mirror.obj", *shaderProgram);
+	AssimpModelLoader<Mesh<PosVert>> modelLoader2(".\\res\\models", "");
+	auto motorBody = modelLoader.loadModel("motor_body.obj", *mainShader);
+	auto motorHandleBar = modelLoader.loadModel("motor_handle_bar.obj", *mainShader);
+	auto motorWindshield= modelLoader2.loadModel("motor_windshield.obj", *refractiveShader);
+	auto motorFrontWheel= modelLoader.loadModel("motor_front_wheel.obj", *mainShader);
+	auto motorBackWheel= modelLoader.loadModel("motor_back_wheel.obj", *mainShader);
+	auto motorLeftMirror= modelLoader2.loadModel("motor_left_mirror.obj", *reflectiveShader);
+	auto motorRightMirror= modelLoader2.loadModel("motor_right_mirror.obj", *reflectiveShader);
+
+	for (auto&& mesh : motorWindshield.getMeshes())
+	{
+		mesh.getOpenGLRender().addTexture({OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
+	}
+	for (auto&& mesh : motorLeftMirror.getMeshes())
+	{
+		mesh.getOpenGLRender().addTexture({OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
+	}
+	for (auto&& mesh : motorRightMirror.getMeshes())
+	{
+		mesh.getOpenGLRender().addTexture({OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
+	}
 
 	motorBodyNode = attachChildren(NODE_FROM_MODEL(motorBody));
 	
@@ -112,4 +126,9 @@ void MotorbikeNode::animate()
 	motorBackWheelNode->localMat.rotate(speed / backWheelRadius, glm::vec3(0.0f, 0.0f, -1.0f));
 
 	wasSpeedChanged = false;
+}
+
+glm::vec3 MotorbikeNode::getDirection() const
+{
+	return direction;
 }

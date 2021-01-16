@@ -14,7 +14,7 @@
 
 class OpenGLCtx
 {
-	FPSCamera camera;
+	Camera* camera;
 	
 	// TODO: Currently shader programs are stored in two places: here and individual ones in every instance of the OpenGLRender class.
 	// Let's try to remove them from here and retrieve them from the Models before the draw to set the uniforms
@@ -48,13 +48,13 @@ public:
 	const ShaderProgram* addShaderProgram(ShaderProgram&& shaderProgram);
 	void addPointLight(PointLight* pointLight);
 	void addSpotLight(SpotLight* spotLight);
+	void setCamera(Camera* camera);
 	void setDirLight(DirLight* dirLight);
 	void setSkybox(const std::string& texturesDirPath, ShaderProgram shaderProgram);
 	void setWireframeMode(bool wireframeMode);
 	DirLight* getDirLight();
 	std::vector<PointLight*>& getPointLights();
 	std::vector<SpotLight*>& getSpotLights();
-	FPSCamera& getCamera();
 
 	void deleteCtx();
 };
