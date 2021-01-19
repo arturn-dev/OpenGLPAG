@@ -9,7 +9,7 @@ uniform samplerCube skybox;
 out vec4 col_out;
 
 void main() {
-	float ratio = 1.0 / 1.52;
+	float ratio = 1.0 / 1.2;
 	vec3 viewVec = normalize(fragPos - viewPos);
 	vec3 refractedVector = refract(viewVec, normalize(norm), ratio);
 

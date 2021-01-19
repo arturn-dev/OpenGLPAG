@@ -62,9 +62,6 @@ struct SceneData
 	Camera followCamera;
 	FPSCamera fpsCamera;
 	SceneGraphNode* dirLightNode;
-	SceneGraphNode* pointLightNode;
-	SceneGraphNode* spotLight1Node;
-	SceneGraphNode* spotLight2Node;
 	MotorbikeNode* motorbikeNode;
 };
 
@@ -266,32 +263,14 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	auto groundObj = modelLoader.loadModel("ground.obj", *spPtr, aiColor4D{0.1f, 0.1f, 0.1f, 1.0f});
 	auto houseObj = modelLoader.loadModel("domek.obj", *sp3Ptr);
 	auto roofObj = modelLoader.loadModel("dach.obj", *sp3Ptr);
-	auto spaceshipObj = modelLoader.loadModel("spaceship.obj", *spPtr);
-	spaceshipObj.modelMat.translate(glm::vec3(10.0f, 2.0f, 0.0f)).rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	
-	AssimpModelLoader<Mesh<PosVert>> modelLoader2(".\\res\\models", "");
-	auto reflectiveObj = modelLoader2.loadModel("cube.obj", *sp4Ptr);
-	for (auto&& mesh : reflectiveObj.getMeshes())
-	{
-		mesh.getOpenGLRender().addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
-	}
-	rootNode->attachChildren(NODE_FROM_MODEL(reflectiveObj));
-
-	auto refractiveObj = modelLoader2.loadModel("cube.obj", *sp5Ptr);
-	refractiveObj.modelMat.translate(glm::vec3(0.0f, 10.0f, 0.0f));
-	for (auto&& mesh : refractiveObj.getMeshes())
-	{
-		mesh.getOpenGLRender().addTexture(OpenGLRender::Texture{OpenGLRender::Texture::TexCubemap, skyboxTexturesDir});
-	}
-	rootNode->attachChildren(NODE_FROM_MODEL(refractiveObj));
 
 	auto motorbikeNode = rootNode->attachChildren(std::make_unique<MotorbikeNode>(spPtr, sp4Ptr, sp5Ptr, skyboxTexturesDir));
 	motorbikeNode->localMat.translate(glm::vec3(0.0f, 2.24782f, 0.0f));
 	sceneData.motorbikeNode = dynamic_cast<MotorbikeNode*>(motorbikeNode);
 	
-	const int housesInRowCount = 200;
-	const int housesInColCount = 200;
-	const float housesSpacing = 4.0f;
+	const int housesInRowCount = 25;
+	const int housesInColCount = 25;
+	const float housesSpacing = 5.0f;
 	
     std::vector<glm::mat4> iMats;
 	for (int i = 0; i < housesInRowCount; ++i)
@@ -308,11 +287,11 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	auto roofDrawImpls = prepareInstancedRendering(roofObj, housesInColCount * housesInRowCount);
 	
 	rootNode->attachChildren(NODE_FROM_MODEL(groundObj));
-	auto spaceshipNode = rootNode->attachChildren(NODE_FROM_MODEL(spaceshipObj));
 	auto* housesRootNode = rootNode->attachChildren();
 	housesRootNode->localMat.translate(glm::vec3(-990.0f, 0.0f, -990.0f));
 	housesRootNode->attachChildren(NODE_FROM_MODEL(houseObj))
 				  ->attachChildren(NODE_FROM_MODEL(roofObj));
+	housesRootNode->localMat.scale(glm::vec3(8.0f));
 
 	std::vector<SceneGraphNode*> houseNodes;
 	std::vector<SceneGraphNode*> roofNodes;
@@ -349,15 +328,6 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 	auto dirLightNode = rootNode->attachChildren(NODE_FROM_MODEL(DirLight(glm::vec3(1.0f), *sp2Ptr)));
 	dirLightNode->localMat.translate(glm::vec3(0.0f, 3.0f, 0.0f));
 	openGlCtx.setDirLight(dynamic_cast<DirLight*>(dirLightNode->getObject()));
-	auto pointLightNode = rootNode->attachChildren(NODE_FROM_MODEL(PointLight(glm::vec3(1.0f, 0.0f, 1.0f), *sp2Ptr)));
-	openGlCtx.addPointLight(dynamic_cast<PointLight*>(pointLightNode->getObject()));
-	pointLightNode->localMat.translate(glm::vec3(500.0f, 2.0f, 500.0f));
-	auto spotLight1Node = spaceshipNode->attachChildren(NODE_FROM_MODEL(SpotLight(glm::vec3(1.0f), *sp2Ptr, 30.0f)));
-	openGlCtx.addSpotLight(dynamic_cast<SpotLight*>(spotLight1Node->getObject()));
-	spotLight1Node->localMat.translate(glm::vec3(2.0f, -3.0f, 8.0f));
-	auto spotLight2Node = (*(houseNodes.end() - 1))->attachChildren(NODE_FROM_MODEL(SpotLight(glm::vec3(1.0f), *sp2Ptr, 30.0f)));
-	openGlCtx.addSpotLight(dynamic_cast<SpotLight*>(spotLight2Node->getObject()));
-	spotLight2Node->localMat.translate(glm::vec3(2.0f, 3.0f, 5.0f));
 	
 	rootNode->updateModelMats();
 
@@ -367,9 +337,6 @@ SceneData prepareScene(OpenGLCtx& openGlCtx, SceneGraphNode* rootNode)
 
 	sceneData.instancedSceneGraphNodes = instancedSceneGraphNodes;
 	sceneData.dirLightNode = dirLightNode;
-	sceneData.pointLightNode = pointLightNode;
-	sceneData.spotLight1Node = spotLight1Node;
-	sceneData.spotLight2Node = spotLight2Node;
 
 	openGlCtx.setSkybox(skyboxTexturesDir, skyboxShader);
 
@@ -461,22 +428,10 @@ int main(int, char**)
 
 	bool isWireframeMode = false;
 	bool dirLightOn = true;
-	bool pointLightOn = true;
-	bool spotLight1On = true;
-	bool spotLight2On = true;
-	bool dirLightObjVisible = true;
-	bool pointLightObjVisible = true;
-	bool spotLight1ObjVisible = true;
-	bool spotLight2ObjVisible = true;
+	bool dirLightObjVisible = false;
 
 	glm::vec3 dirLightColor = glm::vec3(1.0f);
-	glm::vec3 pointLightColor = glm::vec3(1.0f);
-	glm::vec3 spotLight1Color = glm::vec3(1.0f);
-	glm::vec3 spotLight2Color = glm::vec3(1.0f);
-
 	glm::vec3 dirLightDirection = glm::vec3(1.0f, -1.0f, -1.0f);
-	glm::vec3 spotLight1Direction = glm::vec3(1.0f, -1.0f, -1.0f);
-	glm::vec3 spotLight2Direction = glm::vec3(-1.0f, -1.0f, -1.0f);
 
 	// End of GUI controls settings //
 	
@@ -523,15 +478,7 @@ int main(int, char**)
 			updateInstancedNodes(sceneData.instancedSceneGraphNodes);
 		}
 
-		sceneData.instancedSceneGraphNodes[0].nodes[0]->localMat.translate(glm::vec3(0.0f, 0.01f, 0.0f));
-    	sceneData.pointLightNode->localMat.setTMat(
-			glm::rotate(glm::mat4(1.0f), 0.005f, glm::vec3(0.0f, 1.0f, 0.0f)) * sceneData.pointLightNode->localMat.getTMat()
-		);
-
 		sceneData.dirLightNode->updateModelMats();
-    	sceneData.pointLightNode->updateModelMats();
-    	sceneData.spotLight1Node->updateModelMats();
-    	sceneData.spotLight2Node->updateModelMats();
     	
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -551,20 +498,6 @@ int main(int, char**)
         	ImGui::Checkbox("Enabled", &dirLightOn); ImGui::SameLine(); ImGui::Checkbox("Object visible", &dirLightObjVisible);
         	ImGui::ColorEdit3("Color", glm::value_ptr(dirLightColor));
         	ImGui::SliderFloat3("Direction", glm::value_ptr(dirLightDirection), -1.0f, 1.0f);
-        	
-			ImGui::Text("Point light ");
-        	ImGui::Checkbox("Enabled##a", &pointLightOn); ImGui::SameLine(); ImGui::Checkbox("Object visible##a", &pointLightObjVisible);
-        	ImGui::ColorEdit3("Color##a", glm::value_ptr(pointLightColor));
-        	
-			ImGui::Text("1st spot light");
-        	ImGui::Checkbox("Enabled##b", &spotLight1On); ImGui::SameLine(); ImGui::Checkbox("Object visible##b", &spotLight1ObjVisible);
-        	ImGui::ColorEdit3("Color##b", glm::value_ptr(spotLight1Color));
-        	ImGui::SliderFloat3("Direction##b", glm::value_ptr(spotLight1Direction), -1.0f, 1.0f);
-        	
-        	ImGui::Text("2st spot light");
-        	ImGui::Checkbox("Enabled##c", &spotLight2On); ImGui::SameLine(); ImGui::Checkbox("Object visible##c", &spotLight2ObjVisible);
-        	ImGui::ColorEdit3("Color##c", glm::value_ptr(spotLight2Color));
-        	ImGui::SliderFloat3("Direction##c", glm::value_ptr(spotLight2Direction), -1.0f, 1.0f);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
@@ -580,18 +513,6 @@ int main(int, char**)
     	dirLight->changeState(dirLightOn, dirLightObjVisible);
     	dirLight->setColor(dirLightColor);
     	dirLight->setDirection(dirLightDirection);
-    	
-        auto pointLight = openGlCtx.getPointLights()[0];
-    	pointLight->changeState(pointLightOn, pointLightObjVisible);
-    	pointLight->setColor(pointLightColor);
-    	
-    	auto spotLights = openGlCtx.getSpotLights();
-    	spotLights[0]->changeState(spotLight1On, spotLight1ObjVisible);
-    	spotLights[0]->setColor(spotLight1Color);
-    	spotLights[0]->setDirection(glm::vec3(-spotLight1Direction.x, -spotLight1Direction.y, spotLight1Direction.z));
-    	spotLights[1]->changeState(spotLight2On, spotLight2ObjVisible);
-    	spotLights[1]->setColor(spotLight2Color);
-    	spotLights[1]->setDirection(spotLight2Direction);
 
     	sceneData.motorbikeNode->animate();
 

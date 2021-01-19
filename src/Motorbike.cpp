@@ -51,9 +51,11 @@ MotorbikeNode::MotorbikeNode(const ShaderProgram* mainShader, const ShaderProgra
 	// Calculate rotation axis for handle bar (front wheel)
 	const float angleDeg = 25.8f;
 	glm::vec4 verticalVec(0.0f, 1.0f, 0.0f, 0.0f);
+	glm::vec4 frontVec(1.0f, 0.0f, 0.0f, 0.0f);
+	
 	auto rotMat = glm::rotate(glm::mat4(1.0f), glm::radians(angleDeg), glm::vec3(0.0f, 0.0f, 1.0f));
-
 	frontWheelRotationAxis = glm::normalize(rotMat * verticalVec);
+	frontWheelFrontDir = glm::normalize(rotMat * frontVec);
 }
 
 void MotorbikeNode::accelerate()
@@ -100,23 +102,31 @@ void MotorbikeNode::animate()
 {
 	if (!wasSpeedChanged)
 		decelerate();
+	wasSpeedChanged = false;
 
 	// Calculate rotation
 	float angleDelta = 0.0f;
 	
 	if (glm::abs(frontWheelAngleDeg) > 0.01f)
 	{
-		const float frontWheelTrajectoryRadius = wheelsSpan / glm::cos(glm::radians(90.0f - glm::abs(frontWheelAngleDeg)));
+		auto rotMat = glm::rotate(glm::mat4(1.0f), glm::radians(frontWheelAngleDeg), frontWheelRotationAxis);
+		glm::vec3 frontWheelRotationDir = rotMat * glm::vec4(frontWheelFrontDir.x, frontWheelFrontDir.y, frontWheelFrontDir.z, 0.0f);
+		frontWheelRotationDir.y = 0.0f;
+		frontWheelRotationDir = glm::normalize(frontWheelRotationDir);
+		float rotationAngle = glm::acos(glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), frontWheelRotationDir));
+		
+		const float frontWheelTrajectoryRadius = wheelsSpan / glm::cos(glm::pi<float>() / 2.0f - glm::abs(rotationAngle));
 		angleDelta = speed / frontWheelTrajectoryRadius;
 		if (frontWheelAngleDeg < 0)
 			angleDelta *= -1;
 
 		glm::vec4 directionVec4(direction.x, direction.y, direction.z, 0.0f);
-		auto rotMat = glm::rotate(glm::mat4(1.0f), angleDelta, glm::vec3(0.0f, 1.0f, 0.0f));
+		rotMat = glm::rotate(glm::mat4(1.0f), angleDelta, glm::vec3(0.0f, 1.0f, 0.0f));
 		direction = glm::normalize(rotMat * directionVec4);
 	}
 	
 	localMat.translate(direction * speed);
+
 	motorBodyNode->localMat.rotate(angleDelta, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	motorHandleBarNode->localMat.setTMat(TMat());
@@ -124,8 +134,6 @@ void MotorbikeNode::animate()
 
 	motorFrontWheelNode->localMat.rotate(speed / frontWheelRadius, glm::vec3(0.0f, 0.0f, -1.0f));
 	motorBackWheelNode->localMat.rotate(speed / backWheelRadius, glm::vec3(0.0f, 0.0f, -1.0f));
-
-	wasSpeedChanged = false;
 }
 
 glm::vec3 MotorbikeNode::getDirection() const
