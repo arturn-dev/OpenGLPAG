@@ -46,6 +46,7 @@ float cursorLastY = 0;
 float cursorDeltaX = 0;
 float cursorDeltaY = 0;
 float cameraSpeedMult = 1.0f;
+float followCameraRotationDeg = 0.0f;
 
 float timeDelta = 0.0;
 double timeLastFrame = 0.0;
@@ -150,10 +151,17 @@ void setupCamera(OpenGLCtx& openGlCtx, SceneData& sceneData)
 	}
 	else
 	{
+		followCameraRotationDeg += cursorDeltaX * mouseSensitivity;
+		
 		openGlCtx.setCamera(&sceneData.followCamera);
 		glm::vec3 motorbikePos = sceneData.motorbikeNode->getObject()->modelMat.getTMat()[3];
 		sceneData.followCamera.setCenter(motorbikePos + glm::vec3(0.0f, 3.0f, 0.0f));
-    	sceneData.followCamera.setPosition(motorbikePos + sceneData.motorbikeNode->getDirection() * -8.0f + glm::vec3(0.0f, 5.0f, 0.0f));
+		
+		auto rotMat = glm::rotate(glm::mat4(1.0f), glm::radians(followCameraRotationDeg), glm::vec3(0.0f, 1.0f, 0.0f));
+		auto motorbikeDir = sceneData.motorbikeNode->getDirection();
+		glm::vec4 directionVec4(motorbikeDir.x, motorbikeDir.y, motorbikeDir.z, 0.0f);
+		glm::vec3 cameraDir = rotMat * directionVec4;
+    	sceneData.followCamera.setPosition(motorbikePos + (cameraDir * -15.0f + glm::vec3(0.0f, 4.0f, 0.0f)));
 	}
 }
 
@@ -491,7 +499,7 @@ int main(int, char**)
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            ImGui::Begin("Solar System");
+            ImGui::Begin("OpenGL App");
         	ImGui::Checkbox("Wireframe mode", &isWireframeMode);
         	
         	ImGui::Text("Directional light");

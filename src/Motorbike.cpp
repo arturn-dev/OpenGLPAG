@@ -104,19 +104,26 @@ void MotorbikeNode::animate()
 		decelerate();
 	wasSpeedChanged = false;
 
-	// Calculate rotation
+	const float pi = glm::pi<float>();
+	const float dblPi = 2 * pi;
 	float angleDelta = 0.0f;
+	float frontWheelTrajectoryRadius = 0.0f;
 	
-	if (glm::abs(frontWheelAngleDeg) > 0.01f)
+	if (glm::abs(frontWheelAngleDeg) > 0.05f)
 	{
+		// Calculate rotation of the front wheel on XZ plane.
 		auto rotMat = glm::rotate(glm::mat4(1.0f), glm::radians(frontWheelAngleDeg), frontWheelRotationAxis);
 		glm::vec3 frontWheelRotationDir = rotMat * glm::vec4(frontWheelFrontDir.x, frontWheelFrontDir.y, frontWheelFrontDir.z, 0.0f);
 		frontWheelRotationDir.y = 0.0f;
 		frontWheelRotationDir = glm::normalize(frontWheelRotationDir);
 		float rotationAngle = glm::acos(glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), frontWheelRotationDir));
+		float betaAngle = pi / 2.0f - glm::abs(rotationAngle);
 		
-		const float frontWheelTrajectoryRadius = wheelsSpan / glm::cos(glm::pi<float>() / 2.0f - glm::abs(rotationAngle));
-		angleDelta = speed / frontWheelTrajectoryRadius;
+		frontWheelTrajectoryRadius = wheelsSpan / glm::cos(betaAngle);
+		float backWheelTrajectoryRadius = frontWheelTrajectoryRadius * glm::sin(betaAngle);
+		float backWheelTrajectoryCircum = dblPi * backWheelTrajectoryRadius;
+		
+		angleDelta = (speed / backWheelTrajectoryCircum) * dblPi;
 		if (frontWheelAngleDeg < 0)
 			angleDelta *= -1;
 
@@ -132,7 +139,11 @@ void MotorbikeNode::animate()
 	motorHandleBarNode->localMat.setTMat(TMat());
 	motorHandleBarNode->localMat.rotate(glm::radians(frontWheelAngleDeg), frontWheelRotationAxis);
 
-	motorFrontWheelNode->localMat.rotate(speed / frontWheelRadius, glm::vec3(0.0f, 0.0f, -1.0f));
+	if (frontWheelAngleDeg < 0)
+		angleDelta *= -1;
+	float angle = dblPi * (angleDelta * frontWheelTrajectoryRadius) / (dblPi * frontWheelRadius);
+	motorFrontWheelNode->localMat.rotate(angle, glm::vec3(0.0f, 0.0f, -1.0f));
+		
 	motorBackWheelNode->localMat.rotate(speed / backWheelRadius, glm::vec3(0.0f, 0.0f, -1.0f));
 }
 
